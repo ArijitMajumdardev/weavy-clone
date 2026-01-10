@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { useReactFlow } from 'reactflow';
 import { useFlowStore } from '@/store/flowStore';
 import { useHistoryStore } from '@/store/historyStore';
+import { Hand, MousePointer2, Redo2, Undo2 } from 'lucide-react';
 
 export default function FloatingDock() {
   const { getZoom, setViewport, getViewport } = useReactFlow();
@@ -57,36 +58,32 @@ export default function FloatingDock() {
   const zoomLevels = [25, 50, 75, 100, 125, 150, 200];
 
   return (
-    <div className="absolute -bottom-5 left-1/2 -translate-2/3 z-10">
-      <div className="bg-[#232323] border border-[#3a3a3a] rounded-lg shadow-2xl px-2 py-1 flex items-center gap-2">
+    <div className="absolute -bottom-3 left-1/2 -translate-2/4 z-10">
+      <div className="bg-[#232323] border border-[#3a3a3a] rounded-lg shadow-2xl px-2 py-2 flex items-center gap-1">
         {/* Cursor Mode */}
         <button
           onClick={() => setInteractionMode('cursor')}
-          className={`p-1.5 rounded-lg transition-all ${
+          className={`p-1 cursor-pointer rounded-sm transition-all ${
             interactionMode === 'cursor'
-              ? 'bg-[#fef08a] text-[#1a1a1a]'
+              ? 'bg-accent text-[#1a1a1a]'
               : 'text-[#e5e5e5] hover:bg-[#2a2a2a]'
           }`}
           title="Selection Mode"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-          </svg>
+          <MousePointer2 strokeWidth={1} size={20} />
         </button>
 
         {/* Hand Mode */}
         <button
           onClick={() => setInteractionMode('hand')}
-          className={`p-2.5 rounded-lg transition-all ${
+          className={`p-1 cursor-pointer rounded-sm transition-all ${
             interactionMode === 'hand'
-              ? 'bg-[#fef08a] text-[#1a1a1a]'
+              ? 'bg-accent text-[#1a1a1a]'
               : 'text-[#e5e5e5] hover:bg-[#2a2a2a]'
           }`}
           title="Pan Mode"
         >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M9 3a1 1 0 012 0v5.5a.5.5 0 001 0V4a1 1 0 112 0v4.5a.5.5 0 001 0V6a1 1 0 112 0v5a7 7 0 11-14 0V9a1 1 0 012 0v2.5a.5.5 0 001 0V4a1 1 0 012 0v4.5a.5.5 0 001 0V3z" clipRule="evenodd" />
-          </svg>
+          <Hand size={20} strokeWidth={1} />
         </button>
 
         {/* Divider */}
@@ -96,24 +93,20 @@ export default function FloatingDock() {
         <button
           onClick={handleUndo}
           disabled={!canUndo}
-          className="p-2.5 text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          className="p-0.5 text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent cursor-pointer"
           title="Undo"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
+         <Undo2 size={25} strokeWidth={1} />
         </button>
 
         {/* Redo */}
         <button
           onClick={handleRedo}
           disabled={!canRedo}
-          className="p-2.5 text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          className="p-0.5 text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent cursor-pointer"
           title="Redo"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-          </svg>
+         <Redo2 size={25} strokeWidth={1} />
         </button>
 
         {/* Divider */}
@@ -123,7 +116,7 @@ export default function FloatingDock() {
         <div className="relative">
           <button
             onClick={() => setShowZoomMenu(!showZoomMenu)}
-            className="px-3 py-1.5 text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all flex items-center gap-2 min-w-[80px]"
+            className="px-3  text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all flex items-center gap-2 min-w-[80px]"
           >
             <span className="text-sm font-medium">{zoom}%</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

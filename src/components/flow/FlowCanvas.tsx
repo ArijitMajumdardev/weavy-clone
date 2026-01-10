@@ -12,6 +12,7 @@ import ReactFlow, {
   applyNodeChanges,
   applyEdgeChanges,
   BackgroundVariant,
+  ConnectionMode,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -68,15 +69,23 @@ export default function FlowCanvas() {
   const onConnect: OnConnect = useCallback(
     (connection) => {
       saveStateForHistory();
+
+      // Find the source node to determine its type
+      const sourceNode = nodes.find((node) => node.id === connection.source);
+      const sourceType = sourceNode?.type;
+
       const edge = {
         ...connection,
         id: `${connection.source}-${connection.target}`,
         type: 'custom',
-        animated: true,
+        animated: false,
+        data: {
+          sourceType,
+        },
       };
       setEdges(addEdge(edge, edges));
     },
-    [edges, setEdges, saveStateForHistory]
+    [edges, nodes, setEdges, saveStateForHistory]
   );
 
   const onDragOver = useCallback((event: DragEvent) => {
@@ -126,16 +135,19 @@ export default function FlowCanvas() {
         onDrop={onDrop}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        
-        deleteKeyCode="Delete"
+
+        deleteKeyCode={['Delete', 'Backspace']}
         multiSelectionKeyCode="Control"
+        connectionMode={ConnectionMode.Loose}
         panOnDrag={interactionMode === 'hand'}
         nodesDraggable={interactionMode === 'cursor'}
         nodesConnectable={interactionMode === 'cursor'}
         elementsSelectable={interactionMode === 'cursor'}
+        edgesFocusable={interactionMode === 'cursor'}
+        connectOnClick={false}
         defaultEdgeOptions={{
-          style: { stroke: '#a855f7', strokeWidth: 2 },
-          animated: true,
+          style: { stroke: '#f1a1fb', strokeWidth: 2 },
+          animated: false,
         }}
       >
         <Background

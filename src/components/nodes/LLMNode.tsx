@@ -1,44 +1,45 @@
 'use client';
 
-import { memo, useCallback, ChangeEvent } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
+import { useCallback, useRef, useState, useEffect } from 'react';
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { LLMNodeData } from '@/types/nodes';
 import { useFlowStore } from '@/store/flowStore';
-import { aggregateNodeInputs } from '@/lib/dataFlow';
-import { GEMINI_MODELS } from '@/lib/gemini';
+import { aggregateNodeInputsByHandle } from '@/lib/dataFlow';
 import { LLMRequest, LLMResponse } from '@/types/api';
+
+const COLLAPSED_HEIGHT = 260;
 
 function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
   const updateNode = useFlowStore((state) => state.updateNode);
   const interactionMode = useFlowStore((state) => state.interactionMode);
   const nodes = useFlowStore((state) => state.nodes);
   const edges = useFlowStore((state) => state.edges);
+  const updateNodeInternals = useUpdateNodeInternals();
 
-  const handleModelChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    updateNode(id, { model: e.target.value });
-  }, [id, updateNode]);
+  const outputRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedHeight, setExpandedHeight] = useState<number>(COLLAPSED_HEIGHT);
 
-  const handleSystemPromptChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    updateNode(id, { systemPrompt: e.target.value });
-  }, [id, updateNode]);
+  const imageInputs = data.imageInputs ?? 1;
+
+  /* ---------------- RUN MODEL ---------------- */
 
   const handleRun = useCallback(async () => {
-    // Aggregate inputs from connected nodes
-    const inputs = aggregateNodeInputs(id, nodes, edges);
+    const { systemPrompt, userMessage, images } =
+      aggregateNodeInputsByHandle(id, nodes, edges);
 
-    if (inputs.length === 0) {
-      updateNode(id, { error: 'No inputs connected' });
+    if (!userMessage) {
+      updateNode(id, { error: 'Prompt is required' });
       return;
     }
 
-    // Set loading state
     updateNode(id, { isLoading: true, error: null, output: null });
 
     try {
       const requestBody: LLMRequest = {
         model: data.model,
-        systemPrompt: data.systemPrompt || undefined,
-        inputs,
+        systemPrompt: systemPrompt?.content,
+        inputs: [userMessage, ...images],
       };
 
       const response = await fetch('/api/llm', {
@@ -52,119 +53,202 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
       if (result.success && result.output) {
         updateNode(id, { isLoading: false, output: result.output });
       } else {
-        updateNode(id, { isLoading: false, error: result.error || 'Unknown error' });
+        updateNode(id, {
+          isLoading: false,
+          error: result.error || 'Unknown error',
+        });
       }
-    } catch (error) {
+    } catch (err) {
       updateNode(id, {
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to execute LLM',
+        error: err instanceof Error ? err.message : 'Failed to run model',
       });
     }
-  }, [id, data.model, data.systemPrompt, nodes, edges, updateNode]);
+  }, [id, data.model, nodes, edges, updateNode]);
+
+  /* ---------------- EXPAND OUTPUT ---------------- */
+
+  useEffect(() => {
+    if (outputRef.current && isExpanded) {
+      setExpandedHeight(outputRef.current.scrollHeight + 24);
+    }
+  }, [isExpanded, data.output]);
+
+  /* ---------------- ADD IMAGE INPUT ---------------- */
+
+  const handleAddImageInput = () => {
+    const newCount = imageInputs + 1;
+    updateNode(id, {
+      imageInputs: newCount,
+    });
+    // Tell ReactFlow to re-scan and register the new handles
+    setTimeout(() => {
+      updateNodeInternals(id);
+    }, 0);
+  };
 
   return (
-    <div className="bg-[#2a2a2a] border-2 border-[#a855f7] rounded-xl shadow-2xl p-4 w-80 max-h-[600px] flex flex-col backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-        <div className="text-lg">🤖</div>
-        <div className="font-semibold text-sm text-[#e5e5e5]">{data.label}</div>
+    <div className="bg-primary rounded-xl shadow-2xl w-[360px] backdrop-blur-sm relative group">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-3">
+        <div className="text-xs font-normal text-white">Any LLM</div>
+        <div className="text-[#9ca3af] cursor-pointer">⋯</div>
       </div>
 
-      {/* Model selector */}
-      <div className="mb-3 flex-shrink-0">
-        <label className="block text-xs font-medium mb-1 text-[#a3a3a3]">Model</label>
-        <select
-          value={data.model}
-          onChange={handleModelChange}
-          disabled={interactionMode === 'hand'}
-          className="w-full p-2 bg-[#1a1a1a] border border-[#3a3a3a] rounded-lg text-sm text-[#e5e5e5] focus:outline-none focus:border-[#a855f7] transition-colors nodrag disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Output */}
+      <div className="px-4 pb-4 pt-2 relative">
+        <div
+          className={`group rounded-lg min-h-70 ${isExpanded ? 'overflow-visible' : 'overflow-auto'}`}
+          style={{ height: isExpanded ? expandedHeight : COLLAPSED_HEIGHT }}
         >
-          {GEMINI_MODELS.map((model) => (
-            <option key={model.id} value={model.id} className="bg-[#1a1a1a]">
-              {model.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div
+            ref={outputRef}
+            className={`
+              bg-primary2
+              rounded-lg
+              border border-[#3a3a3a]
+              p-3
+              text-sm
+              text-[#9ca3af]
+              nodrag
+              transition-[height]
+              duration-200
+              min-h-70
+              ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}
+            `}
+          >
+            {data.isLoading
+              ? 'Running model...'
+              : data.output || 'The generated text will appear here'}
+          </div>
 
-      {/* System prompt */}
-      <div className="mb-3 flex-shrink-0">
-        <label className="block text-xs font-medium mb-1 text-[#a3a3a3]">
-          System Prompt (optional)
-        </label>
-        <textarea
-          value={data.systemPrompt}
-          onChange={handleSystemPromptChange}
-          placeholder="Enter system instructions..."
-          disabled={interactionMode === 'hand'}
-          className="w-full h-20 p-3 bg-[#1a1a1a] border border-[#3a3a3a] rounded-lg resize-none text-sm text-[#e5e5e5] placeholder-[#6b7280] focus:outline-none focus:border-[#a855f7] transition-colors nodrag disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-      </div>
-
-      {/* Run button */}
-      <button
-        onClick={handleRun}
-        disabled={data.isLoading || interactionMode === 'hand'}
-        className="w-full px-4 py-2.5 bg-[#a855f7] text-white rounded-lg hover:bg-[#9333ea] transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-shrink-0"
-      >
-        {data.isLoading ? (
-          <>
-            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Running...
-          </>
-        ) : (
-          'Run Model'
-        )}
-      </button>
-
-      {/* Output/Error display - Scrollable and non-draggable */}
-      {(data.output || data.error) && (
-        <div className="mt-3 flex-1 min-h-0 overflow-hidden">
-          {data.output && (
-            <div className="h-full bg-[#1a1a1a] border border-[#06b6d4] rounded-lg flex flex-col">
-              <div className="font-medium text-[#06b6d4] px-3 pt-3 pb-2 flex items-center gap-1 flex-shrink-0">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-xs">The generated text will appear here</span>
-              </div>
-              <div className="flex-1 overflow-y-auto px-3 pb-3 nodrag">
-                <div className="text-[#e5e5e5] text-xs whitespace-pre-wrap">{data.output}</div>
-              </div>
-            </div>
+          {!isExpanded && data.output && (
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="
+                absolute bottom-4 left-1/2 -translate-x-1/2
+                px-2.5 py-1 text-xs rounded-md
+                bg-[#2a2a2a] border border-[#3a3a3a]
+                text-white opacity-0 group-hover:opacity-100
+                transition-opacity
+              "
+            >
+              Show more
+            </button>
           )}
-
-          {data.error && (
-            <div className="h-full bg-[#1a1a1a] border border-red-500 rounded-lg p-3 overflow-y-auto nodrag">
-              <div className="font-medium text-red-500 mb-2 flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <span className="text-xs">Error:</span>
-              </div>
-              <div className="text-red-400 text-xs">{data.error}</div>
-            </div>
+          {isExpanded && data.output && (
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="
+                absolute bottom-4 left-1/2 -translate-x-1/2
+                px-2.5 py-1 text-xs rounded-md
+                bg-[#2a2a2a] border border-[#3a3a3a]
+                text-white opacity-0 group-hover:opacity-100
+                transition-opacity
+              "
+            >
+              Show less
+            </button>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Input handle */}
+      {/* Bottom actions */}
+      <div className="flex items-center justify-between px-4 pb-3 text-xs text-[#9ca3af]">
+        <button
+          onClick={handleAddImageInput}
+          disabled={interactionMode === 'hand'}
+          className="hover:text-white transition-colors hover:bg-primary2 p-1.5 rounded-md"
+        >
+          + Add another image input
+        </button>
+
+        <button
+          onClick={handleRun}
+          disabled={data.isLoading || interactionMode === 'hand'}
+          className="
+            px-3 py-1.5 rounded-md
+            border border-[#3a3a3a]
+            text-white hover:bg-[#2a2a2a]
+            transition-colors disabled:opacity-50
+          "
+        >
+          → Run Model
+        </button>
+      </div>
+
+      {/* ---------------- INPUT HANDLES ---------------- */}
+
+      {/* Prompt */}
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3 h-3 bg-[#a855f7] border-2 border-[#2a2a2a]"
+        id="user_message"
+        style={{ top: '26%' }}
+        className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
+        isConnectable={true}
       />
+      <div className="absolute left-[-88px] opacity-0 group-hover:opacity-100
+    transition-opacity duration-150
+ top-[24%] text-xs text-[#f1a1fb]">
+        Prompt*
+      </div>
 
-      {/* Output handle */}
+      {/* System Prompt */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="system_prompt"
+        style={{ top: '38%' }}
+        className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
+        isConnectable={true}
+      />
+      <div className="absolute left-[-110px] top-[36%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+    transition-opacity duration-150
+">
+        System Prompt
+      </div>
+
+      {/* Dynamic Image Inputs */}
+      {Array.from({ length: imageInputs }).map((_, index) => {
+        const top = 50 + index * 10;
+
+        return (
+          <div key={`image-input-${index}`}>
+            <Handle
+              type="target"
+              position={Position.Left}
+              id={`images_${index}`}
+              style={{ top: `${top}%` }}
+              className="w-3 h-3 bg-[#22c55e] border-2 border-[#2a2a2a]"
+              isConnectable={true}
+            />
+            <div
+              className="absolute left-[-70px] text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
+    transition-opacity duration-150
+"
+              style={{ top: `${top - 2}%` }}
+            >
+              Image {index + 1}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Output */}
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-[#a855f7] border-2 border-[#2a2a2a]"
+        className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
+        isConnectable={true}
       />
+      <div className="absolute right-[-36px] top-[48%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+    transition-opacity duration-150
+">
+        Text
+      </div>
     </div>
   );
 }
 
-export default memo(LLMNode);
+export default LLMNode;

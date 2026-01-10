@@ -5,7 +5,7 @@ export const NODE_TYPES = {
 } as const;
 
 export const NODE_LABELS = {
-  [NODE_TYPES.TEXT_NODE]: 'Text Input',
-  [NODE_TYPES.IMAGE_NODE]: 'Image Input',
-  [NODE_TYPES.LLM_NODE]: 'Run LLM',
+  [NODE_TYPES.TEXT_NODE]: 'Text',
+  [NODE_TYPES.IMAGE_NODE]: 'Image',
+  [NODE_TYPES.LLM_NODE]: 'LLM',
 } as const;

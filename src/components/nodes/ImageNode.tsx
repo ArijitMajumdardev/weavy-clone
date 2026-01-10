@@ -1,82 +1,124 @@
 'use client';
 
-import { memo, useCallback, ChangeEvent, useRef } from 'react';
+import { memo, useCallback, ChangeEvent, useRef, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { ImageNodeData } from '@/types/nodes';
 import { useFlowStore } from '@/store/flowStore';
+import { Upload } from 'lucide-react';
 
 function ImageNode({ id, data }: NodeProps<ImageNodeData>) {
   const updateNode = useFlowStore((state) => state.updateNode);
   const interactionMode = useFlowStore((state) => state.interactionMode);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
 
-    // Create preview URL
-    const previewUrl = URL.createObjectURL(file);
+  const handleFileChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    // Convert to base64 for API
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
+      const previewUrl = URL.createObjectURL(file);
 
-      updateNode(id, {
-        previewUrl,
-        output: {
-          url: previewUrl,
-          base64,
-          mimeType: file.type,
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  }, [id, updateNode]);
+      const img = new Image();
+      img.onload = () => {
+        setAspectRatio(img.naturalHeight / img.naturalWidth);
+      };
+      img.src = previewUrl;
 
-  const handleButtonClick = () => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+
+        updateNode(id, {
+          previewUrl,
+          output: {
+            url: previewUrl,
+            base64,
+            mimeType: file.type,
+          },
+        });
+      };
+
+      reader.readAsDataURL(file);
+    },
+    [id, updateNode]
+  );
+
+  const openFilePicker = () => {
+    if (interactionMode === 'hand') return;
     fileInputRef.current?.click();
   };
 
   return (
-    <div className="bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl shadow-2xl p-4 min-w-75 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="text-lg">🖼️</div>
-        <div className="font-semibold text-sm text-[#e5e5e5]">{data.label}</div>
+    <div className="bg-primary rounded-lg shadow-2xl px-2.5 pt-3 pb-1.5 w-full backdrop-blur-sm group">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="font-normal text-xs text-[#e5e5e5]">
+          {data.label}
+        </div>
       </div>
 
+      {/* Hidden input */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
         className="hidden"
+        disabled={interactionMode === 'hand'}
       />
 
-      <button
-        onClick={handleButtonClick}
-        disabled={interactionMode === 'hand'}
-        className="w-full mb-3 px-4 py-2 bg-[#1a1a1a] border border-[#3a3a3a] text-[#e5e5e5] rounded-lg hover:border-[#06b6d4] transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[#3a3a3a]"
+      {/* Drop zone / Preview */}
+      <div
+        onClick={openFilePicker}
+        style={
+          aspectRatio
+            ? { height: `${240 * aspectRatio}px` }
+            : { height: '240px' }
+        }
+        className="
+          relative
+          w-full
+          rounded-md
+          border border-[#3a3a3a]
+          bg-[linear-gradient(45deg,#1f1f1f_25%,transparent_25%),linear-gradient(-45deg,#1f1f1f_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1f1f1f_75%),linear-gradient(-45deg,transparent_75%,#1f1f1f_75%)]
+          bg-size-[20px_20px]
+          bg-position-[0_0,0_10px,10px_-10px,-10px_0px]
+          flex items-center justify-center
+          cursor-pointer
+          overflow-hidden
+          transition-[height] duration-200 ease-out
+        "
       >
-        {data.previewUrl ? 'Change Image' : 'Upload Image'}
-      </button>
+        {!data.previewUrl && (
+          <div className="flex flex-col items-center gap-2 text-[#9ca3af] text-sm">
+            <Upload size={18} strokeWidth={1.5} />
+            <span>Drag & drop or click to upload</span>
+          </div>
+        )}
 
-      {data.previewUrl && (
-        <div className="border border-[#3a3a3a] rounded-lg overflow-hidden bg-[#1a1a1a]">
+        {data.previewUrl && (
           <img
             src={data.previewUrl}
             alt="Preview"
-            className="w-full h-32 object-cover"
+            className="w-full h-full object-contain"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Output handle */}
       <Handle
         type="source"
         position={Position.Right}
         className="w-3 h-3 bg-[#06b6d4] border-2 border-[#2a2a2a]"
+        isConnectable={true}
       />
+       <div className="absolute right-[-36px] top-[48%] text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
+    transition-opacity duration-150
+">
+        File
+      </div>
     </div>
   );
 }

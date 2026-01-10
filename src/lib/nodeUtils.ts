@@ -9,7 +9,7 @@ export const createTextNode = (position: { x: number; y: number }): FlowNode => 
   data: {
     id: nanoid(),
     type: 'textNode',
-    label: 'Text Input',
+    label: 'Text',
     content: '',
     output: '',
   } as TextNodeData,
@@ -22,7 +22,7 @@ export const createImageNode = (position: { x: number; y: number }): FlowNode =>
   data: {
     id: nanoid(),
     type: 'imageNode',
-    label: 'Image Input',
+    label: 'Image',
     previewUrl: null,
     output: null,
   } as ImageNodeData,
@@ -35,9 +35,8 @@ export const createLLMNode = (position: { x: number; y: number }): FlowNode => (
   data: {
     id: nanoid(),
     type: 'llmNode',
-    label: 'Run LLM',
+    label: 'LLM',
     model: 'gemini-1.5-flash',
-    systemPrompt: '',
     isLoading: false,
     output: null,
     error: null,

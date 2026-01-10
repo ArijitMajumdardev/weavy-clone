@@ -24,10 +24,10 @@ export interface ImageNodeData extends BaseNodeData {
 export interface LLMNodeData extends BaseNodeData {
   type: 'llmNode';
   model: string;
-  systemPrompt: string;
   isLoading: boolean;
   output: string | null;
   error: string | null;
+  imageInputs?: number;
 }
 
 export type NodeData = TextNodeData | ImageNodeData | LLMNodeData;
