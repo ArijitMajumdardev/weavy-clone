@@ -3,7 +3,6 @@
 import { useCallback, DragEvent } from 'react';
 import ReactFlow, {
   Background,
-  Controls,
   MiniMap,
   addEdge,
   OnNodesChange,
@@ -66,6 +65,46 @@ export default function FlowCanvas() {
     [edges, setEdges, saveStateForHistory]
   );
 
+  const isValidConnection = useCallback(
+    (connection: any) => {
+      const sourceNode = nodes.find((node) => node.id === connection.source);
+      const targetNode = nodes.find((node) => node.id === connection.target);
+
+      if (!sourceNode || !targetNode) return false;
+
+      const sourceType = sourceNode.type;
+      const targetType = targetNode.type;
+      const targetHandle = connection.targetHandle;
+
+      // Rule 1: Image node can ONLY connect to image inputs (images_0, images_1, etc.)
+      if (sourceType === 'imageNode') {
+        if (!targetHandle?.startsWith('images_')) {
+          return false; // Image node cannot connect to text inputs
+        }
+      }
+
+      // Rule 2: Text node can ONLY connect to text inputs (user_message, system_prompt)
+      if (sourceType === 'textNode') {
+        if (targetHandle?.startsWith('images_')) {
+          return false; // Text node cannot connect to image inputs
+        }
+      }
+
+      // Rule 3: LLM node output can ONLY connect to another LLM node's text inputs
+      if (sourceType === 'llmNode') {
+        if (targetType !== 'llmNode') {
+          return false; // LLM node can only connect to another LLM node
+        }
+        if (targetHandle?.startsWith('images_')) {
+          return false; // LLM node cannot connect to image inputs
+        }
+      }
+
+      return true;
+    },
+    [nodes]
+  );
+
   const onConnect: OnConnect = useCallback(
     (connection) => {
       saveStateForHistory();
@@ -74,16 +113,30 @@ export default function FlowCanvas() {
       const sourceNode = nodes.find((node) => node.id === connection.source);
       const sourceType = sourceNode?.type;
 
+      // Check if this is an image input handle on LLM node
+      // Only one connection allowed per image input handle
+      let updatedEdges = edges;
+      if (connection.targetHandle?.startsWith('images_')) {
+        // Remove any existing edge connected to this specific image input handle
+        updatedEdges = edges.filter(
+          (edge) =>
+            !(
+              edge.target === connection.target &&
+              edge.targetHandle === connection.targetHandle
+            )
+        );
+      }
+
       const edge = {
         ...connection,
-        id: `${connection.source}-${connection.target}`,
+        id: `${connection.source}-${connection.sourceHandle || 'default'}-${connection.target}-${connection.targetHandle || 'default'}`,
         type: 'custom',
         animated: false,
         data: {
           sourceType,
         },
       };
-      setEdges(addEdge(edge, edges));
+      setEdges(addEdge(edge, updatedEdges));
     },
     [edges, nodes, setEdges, saveStateForHistory]
   );
@@ -139,6 +192,7 @@ export default function FlowCanvas() {
         deleteKeyCode={['Delete', 'Backspace']}
         multiSelectionKeyCode="Control"
         connectionMode={ConnectionMode.Loose}
+        isValidConnection={isValidConnection}
         panOnDrag={interactionMode === 'hand'}
         nodesDraggable={interactionMode === 'cursor'}
         nodesConnectable={interactionMode === 'cursor'}

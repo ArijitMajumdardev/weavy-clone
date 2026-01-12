@@ -6,7 +6,6 @@ import { NODE_TYPES, NODE_LABELS } from "@/constants/nodeTypes";
 import { useHistoryStore } from "@/store/historyStore";
 import { useFlowStore } from "@/store/flowStore";
 import { Bot, FileImage, History, Search, SearchIcon, Type } from "lucide-react";
-
 type TabType = "quick-access" | "search";
 
 export default function Sidebar() {
@@ -55,7 +54,7 @@ export default function Sidebar() {
       {/* LEFT ICON BAR */}
       <div className="fixed left-0 top-0 h-full w-14 bg-primary border-r border-[#3a3a3a] z-50 flex flex-col gap-4 p-2 py-4">
         <button className="p-1 cursor-pointer">
-          <img src="logo.svg" alt="logo" className="h-5 w-5" />
+          <img src="/logo.svg" alt="logo" className="h-5 w-5" />
         </button>
 
         {/* SEARCH ICON */}
