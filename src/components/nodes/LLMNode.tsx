@@ -5,7 +5,7 @@ import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { LLMNodeData } from '@/types/nodes';
 import { useFlowStore } from '@/store/flowStore';
 import { aggregateNodeInputsByHandle } from '@/lib/dataFlow';
-import { LLMRequest, LLMResponse } from '@/types/api';
+import { trpc } from '@/lib/trpc/client';
 
 const COLLAPSED_HEIGHT = 260;
 
@@ -22,6 +22,10 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
 
   const imageInputs = data.imageInputs ?? 1;
 
+  /* ---------------- TRPC MUTATION ---------------- */
+
+  const generateContentMutation = trpc.llm.generateContent.useMutation();
+
   /* ---------------- RUN MODEL ---------------- */
 
   const handleRun = useCallback(async () => {
@@ -35,36 +39,33 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
 
     updateNode(id, { isLoading: true, error: null, output: null });
 
-    try {
-      const requestBody: LLMRequest = {
+    generateContentMutation.mutate(
+      {
         model: data.model,
         systemPrompt: systemPrompt?.content,
         inputs: [userMessage, ...images],
-      };
-
-      const response = await fetch('/api/llm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-
-      const result: LLMResponse = await response.json();
-
-      if (result.success && result.output) {
-        updateNode(id, { isLoading: false, output: result.output });
-      } else {
-        updateNode(id, {
-          isLoading: false,
-          error: result.error || 'Unknown error',
-        });
+      },
+      {
+        onSuccess: (result: { success: boolean; output?: string; error?: string }) => {
+          if (result.success && result.output) {
+            
+            updateNode(id, { isLoading: false, output: result.output });
+          } else {
+            updateNode(id, {
+              isLoading: false,
+              error: result.error || 'Unknown error',
+            });
+          }
+        },
+        onError: (err: unknown) => {
+          updateNode(id, {
+            isLoading: false,
+            error: err instanceof Error ? err.message : 'Failed to run model',
+          });
+        },
       }
-    } catch (err) {
-      updateNode(id, {
-        isLoading: false,
-        error: err instanceof Error ? err.message : 'Failed to run model',
-      });
-    }
-  }, [id, data.model, nodes, edges, updateNode]);
+    );
+  }, [id, data.model, nodes, edges, updateNode, generateContentMutation]);
 
   /* ---------------- EXPAND OUTPUT ---------------- */
 
@@ -88,7 +89,7 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
   };
 
   return (
-    <div className="bg-primary rounded-xl shadow-2xl w-[360px] backdrop-blur-sm relative group">
+    <div className="bg-primary rounded-xl shadow-2xl w-90 backdrop-blur-sm relative group">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="text-xs font-normal text-white">Any LLM</div>

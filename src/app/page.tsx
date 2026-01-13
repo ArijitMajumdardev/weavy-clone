@@ -2,21 +2,68 @@
 
 import { useRouter } from 'next/navigation';
 import { nanoid } from 'nanoid';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, Search, LayoutGrid, List, Folder } from 'lucide-react';
+import { trpc } from '@/lib/trpc/client';
+import { UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   const router = useRouter();
-  const [files] = useState([
-    { id: '1', name: 'untitled', edited: '13 seconds ago' },
-    { id: '2', name: 'untitled', edited: '46 seconds ago' },
-    { id: '3', name: 'My First Weavy', edited: '1 minute ago' },
-    { id: '4', name: 'untitled', edited: '3 days ago' },
-  ]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleCreateWorkflow = () => {
+  // Debounce search query
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Fetch workflows based on search
+  const { data: workflows, isLoading } = trpc.workflow.search.useQuery(
+    { query: debouncedQuery },
+    { enabled: true }
+  );
+
+  const createWorkflowMutation = trpc.workflow.create.useMutation();
+
+  const handleCreateWorkflow = async () => {
     const workflowId = nanoid();
-    router.push(`/flow/${workflowId}`);
+
+    try {
+      await createWorkflowMutation.mutateAsync({
+        id: workflowId,
+        name: 'untitled',
+      });
+
+      router.push(`/flow/${workflowId}`);
+    } catch (error) {
+      console.error('Failed to create workflow:', error);
+      alert('Failed to create workflow. Please try again.');
+    }
+  };
+
+  // Format relative time
+  const getRelativeTime = (date: Date | string) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minute${Math.floor(diffInSeconds / 60) > 1 ? 's' : ''} ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hour${Math.floor(diffInSeconds / 3600) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffInSeconds / 86400)} day${Math.floor(diffInSeconds / 86400) > 1 ? 's' : ''} ago`;
   };
 
   return (
@@ -25,9 +72,10 @@ export default function Home() {
       <aside className="w-64 bg-[#0b0c10] border-r border-[#1f1f1f] flex flex-col p-4">
         {/* Profile */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-sm">
+          {/* <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-sm">
             A
-          </div>
+          </div> */}
+          <UserButton/>
           <span className="text-sm">Arijit Majumdar</span>
         </div>
 
@@ -79,6 +127,8 @@ export default function Home() {
                 <Search size={14} className="text-[#6b7280]" />
                 <input
                   placeholder="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent outline-none text-sm"
                 />
               </div>
@@ -88,23 +138,31 @@ export default function Home() {
           </div>
 
           {/* Files Grid */}
-          <div className="grid grid-cols-4 gap-6">
-            {files.map((file) => (
-              <div
-                key={file.id}
-                onClick={() => router.push(`/flow/${file.id}`)}
-                className="cursor-pointer"
-              >
-                <div className="h-40 bg-[#14151a] border border-[#1f1f1f] rounded-xl flex items-center justify-center mb-2">
-                  ⬚
+          {isLoading ? (
+            <div className="text-center text-[#6b7280] py-8">Loading workflows...</div>
+          ) : workflows && workflows.length > 0 ? (
+            <div className="grid grid-cols-4 gap-6">
+              {workflows.map((workflow) => (
+                <div
+                  key={workflow.id}
+                  onClick={() => router.push(`/flow/${workflow.id}`)}
+                  className="cursor-pointer"
+                >
+                  <div className="h-40 bg-[#14151a] border border-[#1f1f1f] rounded-xl flex items-center justify-center mb-2 hover:border-[#3a3a3a] transition-colors">
+                    ⬚
+                  </div>
+                  <div className="text-sm">{workflow.name}</div>
+                  <div className="text-xs text-[#6b7280]">
+                    Last edited {getRelativeTime(workflow.updatedAt)}
+                  </div>
                 </div>
-                <div className="text-sm">{file.name}</div>
-                <div className="text-xs text-[#6b7280]">
-                  Last edited {file.edited}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-[#6b7280] py-8">
+              {searchQuery ? 'No workflows found matching your search' : 'No workflows yet. Create your first workflow!'}
+            </div>
+          )}
         </div>
       </main>
     </div>

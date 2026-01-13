@@ -1,13 +1,17 @@
-'use client';
+"use client";
 
-import dynamic from 'next/dynamic';
-import Sidebar from '@/components/sidebar/Sidebar';
-import Toolbar from '@/components/toolbar/Toolbar';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useParams } from 'next/navigation';
+import dynamic from "next/dynamic";
+import { useEffect } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useWorkflowAutoSave } from "@/hooks/useWorkflowAutoSave";
+import { useParams } from "next/navigation";
+import { trpc } from "@/lib/trpc/client";
+import { EditableWorkflowName } from "@/components/workflow/EditableWorkflowName";
+import { useFlowStore } from "@/store/flowStore";
 
 // Dynamic import to avoid SSR issues with React Flow
-const FlowCanvas = dynamic(() => import('@/components/flow/FlowCanvas'), {
+const FlowCanvas = dynamic(() => import("@/components/flow/FlowCanvas"), {
   ssr: false,
 });
 
@@ -15,18 +19,51 @@ export default function FlowPage() {
   const params = useParams();
   const workflowId = params.id as string;
 
+  // Fetch workflow data
+  const { data: workflow, isLoading } = trpc.workflow.get.useQuery({
+    id: workflowId,
+  });
+
+  // Fetch workflow canvas data (nodes and edges)
+  const { data: workflowData, isLoading: isLoadingData } = trpc.workflow.getData.useQuery({
+    id: workflowId,
+  });
+
+  const setNodes = useFlowStore((state) => state.setNodes);
+  const setEdges = useFlowStore((state) => state.setEdges);
+
+  // Load workflow data into the store when fetched
+  useEffect(() => {
+    if (workflowData) {
+      setNodes(workflowData.nodes as any || []);
+      setEdges(workflowData.edges as any || []);
+    }
+  }, [workflowData, setNodes, setEdges]);
+
+  // Enable auto-save
+  useWorkflowAutoSave(workflowId);
+
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Note: Auto-save and load workflow disabled for now
-  // Will implement database persistence later with workflowId
-
   return (
-    <div className="w-screen h-screen flex flex-col">
-      {/* <Toolbar /> */}
+    <div className="w-screen h-screen flex flex-col relative">
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <div className="flex-1">
+        <div className="flex-1 relative">
+          {/* Workflow name */}
+          <div className="bg-primary border border-[#3a3a3a]/50 rounded-md px-4 py-2 w-fit h-10 absolute z-20 left-18 top-4 flex items-center">
+            {isLoading ? (
+              <div className="text-sm text-[#9ca3af]">Loading...</div>
+            ) : workflow ? (
+              <EditableWorkflowName
+                workflowId={workflowId}
+                initialName={workflow.name}
+              />
+            ) : (
+              <div className="text-sm text-[#9ca3af]">Workflow not found</div>
+            )}
+          </div>
           <FlowCanvas />
         </div>
       </div>
