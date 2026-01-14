@@ -5,10 +5,24 @@ import NodeButton from "./NodeButton";
 import { NODE_TYPES, NODE_LABELS } from "@/constants/nodeTypes";
 import { useHistoryStore } from "@/store/historyStore";
 import { useFlowStore } from "@/store/flowStore";
-import { Bot, FileImage, History, Search, SearchIcon, Type } from "lucide-react";
+import {
+  Bot,
+  FileImage,
+  History,
+  Search,
+  SearchIcon,
+  Type,
+} from "lucide-react";
+import { EditableWorkflowName } from "@/components/workflow/EditableWorkflowName";
+
 type TabType = "quick-access" | "search";
 
-export default function Sidebar() {
+interface SidebarProps {
+  workflowId?: string;
+  workflowName?: string;
+}
+
+export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>();
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,7 +41,7 @@ export default function Sidebar() {
     {
       type: NODE_TYPES.IMAGE_NODE,
       label: NODE_LABELS[NODE_TYPES.IMAGE_NODE],
-      icon: <FileImage size={20} strokeWidth={1} color="white"/>,
+      icon: <FileImage size={20} strokeWidth={1} color="white" />,
     },
     {
       type: NODE_TYPES.LLM_NODE,
@@ -52,7 +66,7 @@ export default function Sidebar() {
   return (
     <>
       {/* LEFT ICON BAR */}
-      <div className="fixed left-0 top-0 h-full w-14 bg-primary border-r border-[#3a3a3a] z-50 flex flex-col gap-4 p-2 py-4">
+      <div className="fixed left-0 top-0 h-full w-14 bg-primary border-r border-[#3a3a3a]/50 z-50 flex flex-col gap-4 p-2 py-4">
         <button className="p-1 cursor-pointer">
           <img src="/logo.svg" alt="logo" className="h-5 w-5" />
         </button>
@@ -110,8 +124,21 @@ export default function Sidebar() {
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="flex flex-col h-full p-4 gap-4 ">
+        <div className="flex flex-col h-full py-4 gap-4 ">
+          {/* WORKFLOW NAME */}
+          {workflowId && workflowName && (
+            <div className="bg-primary  rounded-md px-3 py-2">
+              <EditableWorkflowName
+                workflowId={workflowId}
+                initialName={workflowName}
+              />
+            </div>
+          )}
+
           {/* SEARCH BAR */}
+
+          <div className="border-y border-[#3a3a3a]/30 w-full p-4 ">
+
           <div
             className="
     flex flex-row items-center gap-2
@@ -138,13 +165,12 @@ export default function Sidebar() {
       placeholder:text-xs
     "
             />
-          </div>
+            </div>
+            </div>
 
           {/* QUICK ACCESS */}
-          <div className="flex flex-col gap-3">
-            <span className="text-md font-semibold ">
-              Quick access
-            </span>
+          <div className="flex flex-col gap-3 px-4">
+            <span className="text-md font-semibold ">Quick access</span>
 
             <div className="grid grid-cols-2 gap-3">
               {filteredNodes.map((node) => (

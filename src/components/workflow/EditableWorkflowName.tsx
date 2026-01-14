@@ -58,7 +58,7 @@ export function EditableWorkflowName({ workflowId, initialName }: EditableWorkfl
   };
 
   return (
-    <div className="inline-block">
+    <div className="inline-block w-full">
       {isEditing ? (
         <input
           ref={inputRef}
@@ -67,12 +67,12 @@ export function EditableWorkflowName({ workflowId, initialName }: EditableWorkfl
           onChange={(e) => setName(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="bg-transparent border-b border-[#3a3a3a] text-sm text-white outline-none px-1 py-0.5 min-w-[100px]"
+          className="bg-transparent rounded-sm transition-all duration-200 border border-white text-sm text-white outline-none px-1 py-0.5 min-w-25"
         />
       ) : (
         <div
           onClick={handleClick}
-          className="text-sm text-white cursor-pointer px-1 py-0.5 hover:bg-[#2a2a2a] rounded transition-colors"
+          className="text-sm w-full text-white cursor-pointer px-1 py-0.5 rounded transition-colors"
         >
           {name}
         </div>

@@ -49,10 +49,11 @@ export default function FlowPage() {
   return (
     <div className="w-screen h-screen flex flex-col relative">
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
+        <Sidebar workflowId={workflowId}
+                workflowName={workflow?.name} />
         <div className="flex-1 relative">
           {/* Workflow name */}
-          <div className="bg-primary border border-[#3a3a3a]/50 rounded-md px-4 py-2 w-fit h-10 absolute z-20 left-18 top-4 flex items-center">
+          <div className="bg-primary border border-[#3a3a3a]/50 rounded-md px-4 py-2 w-55 h-10 absolute z-20 left-18 top-4 flex items-center">
             {isLoading ? (
               <div className="text-sm text-[#9ca3af]">Loading...</div>
             ) : workflow ? (
