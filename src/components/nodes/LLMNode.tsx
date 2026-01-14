@@ -8,7 +8,7 @@ import { aggregateNodeInputsByHandle } from "@/lib/dataFlow";
 import { trpc } from "@/lib/trpc/client";
 import { MoreHorizontal, MoreVertical, Trash2 } from "lucide-react";
 
-const COLLAPSED_HEIGHT = 260;
+const COLLAPSED_HEIGHT = 380;
 
 function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
   const updateNode = useFlowStore((state) => state.updateNode);
@@ -100,7 +100,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
 
   return (
     <div
-      className={`rounded-xl shadow-2xl w-90 backdrop-blur-sm relative group ${
+      className={`rounded-xl shadow-2xl w-100 min-h-120  backdrop-blur-sm relative group ${
         selected ? "bg-[#2b2b2f]" : "bg-primary"
       }`}
     >
@@ -148,7 +148,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
       {/* Output */}
       <div className="px-4 pb-4 pt-2 relative">
         <div
-          className={`group rounded-lg min-h-70 ${
+          className={`group rounded-lg min-h-95  ${
             isExpanded ? "overflow-visible" : "overflow-auto"
           }`}
           style={{ height: isExpanded ? expandedHeight : COLLAPSED_HEIGHT }}
@@ -165,8 +165,8 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
               nodrag
               transition-[height]
               duration-200
-              min-h-70
-              ${isExpanded ? "overflow-visible" : "overflow-hidden"}
+              min-h-95
+              ${isExpanded ? "overflow-visible h-full" : "overflow-hidden"}
             `}
           >
             {data.isLoading
@@ -241,7 +241,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         isConnectable={true}
       />
       <div
-        className="absolute left-[-88px] opacity-0 group-hover:opacity-100
+        className="absolute -left-22 opacity-0 group-hover:opacity-100
     transition-opacity duration-150
  top-[24%] text-xs text-[#f1a1fb]"
       >
@@ -258,7 +258,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         isConnectable={true}
       />
       <div
-        className="absolute left-[-110px] top-[36%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+        className="absolute -left-27.5 top-[36%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
 "
       >
@@ -280,7 +280,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
               isConnectable={true}
             />
             <div
-              className="absolute left-[-70px] text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
+              className="absolute -left-17.5 text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
 "
               style={{ top: `${top - 2}%` }}
@@ -299,7 +299,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         isConnectable={true}
       />
       <div
-        className="absolute right-[-36px] top-[48%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+        className="absolute -right-9 top-[48%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
 "
       >

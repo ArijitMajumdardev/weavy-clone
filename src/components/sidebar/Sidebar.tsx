@@ -7,13 +7,21 @@ import { useHistoryStore } from "@/store/historyStore";
 import { useFlowStore } from "@/store/flowStore";
 import {
   Bot,
+  ChevronDown,
   FileImage,
   History,
   Search,
   SearchIcon,
   Type,
+  FolderOpen,
+  Plus,
+  Download,
+  Upload,
 } from "lucide-react";
 import { EditableWorkflowName } from "@/components/workflow/EditableWorkflowName";
+import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
+import { trpc } from "@/lib/trpc/client";
 
 type TabType = "quick-access" | "search";
 
@@ -23,14 +31,22 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const past = useHistoryStore((state) => state.past);
   const nodes = useFlowStore((state) => state.nodes);
+  const edges = useFlowStore((state) => state.edges);
+  const setNodes = useFlowStore((state) => state.setNodes);
+  const setEdges = useFlowStore((state) => state.setEdges);
+
+  const createWorkflowMutation = trpc.workflow.create.useMutation();
 
   const nodeTypes = [
     {
@@ -54,6 +70,83 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     node.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Handle back to files
+  const handleBackToFiles = () => {
+    router.push("/");
+    setShowDropdown(false);
+  };
+
+  // Handle create new workflow
+  const handleCreateNewWorkflow = async () => {
+    const newWorkflowId = nanoid();
+    try {
+      await createWorkflowMutation.mutateAsync({
+        id: newWorkflowId,
+        name: "untitled",
+      });
+      router.push(`/flow/${newWorkflowId}`);
+      setShowDropdown(false);
+    } catch (error) {
+      console.error("Failed to create workflow:", error);
+      alert("Failed to create workflow. Please try again.");
+    }
+  };
+
+  // Handle export workflow
+  const handleExportWorkflow = () => {
+    if (!workflowId) return;
+
+    const workflowData = {
+      id: workflowId,
+      name: workflowName || "untitled",
+      nodes: nodes,
+      edges: edges,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const dataStr = JSON.stringify(workflowData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${workflowName || "workflow"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setShowDropdown(false);
+  };
+
+  // Handle import workflow
+  const handleImportWorkflow = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const workflowData = JSON.parse(content);
+
+        if (workflowData.nodes && workflowData.edges) {
+          setNodes(workflowData.nodes);
+          setEdges(workflowData.edges);
+          setShowDropdown(false);
+        } else {
+          alert("Invalid workflow file format.");
+        }
+      } catch (error) {
+        console.error("Failed to import workflow:", error);
+        alert("Failed to import workflow. Please check the file format.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   // Focus search input ONLY when search tab opens
   useEffect(() => {
     if (isOpen && activeTab === "search") {
@@ -67,9 +160,70 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     <>
       {/* LEFT ICON BAR */}
       <div className="fixed left-0 top-0 h-full w-14 bg-primary border-r border-[#3a3a3a]/50 z-50 flex flex-col gap-4 p-2 py-4">
-        <button className="p-1 cursor-pointer">
-          <img src="/logo.svg" alt="logo" className="h-5 w-5" />
-        </button>
+        {/* Hidden file input for import */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          onChange={handleImportWorkflow}
+          className="hidden"
+        />
+
+        {/* Logo Dropdown Button */}
+        <div className="relative mb-6">
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="py-1.5 px-0.5 cursor-pointer flex justify-center items-center gap-1 rounded transition-colors"
+          >
+            <img src="/logo.svg" alt="logo" className="h-5 w-5" />
+            <ChevronDown size={12} strokeWidth={1.2} color="white" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowDropdown(false)}
+              />
+              <div className="absolute left-0 top-7 z-20 bg-primary border border-[#3a3a3a] rounded-md shadow-xl p-2 min-w-60">
+                <button
+                  onClick={handleBackToFiles}
+                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
+                >
+                  Back to files
+                </button>
+                <div className="border-t border-[#3a3a3a] my-2" />
+
+                <button
+                  onClick={handleCreateNewWorkflow}
+                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
+                >
+                  Create new workflow
+                </button>
+                <div className="border-t border-[#3a3a3a] my-2" />
+                <button
+                  onClick={handleExportWorkflow}
+                  disabled={!workflowId}
+                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Export workflow (JSON)
+                  <Download size={12} />
+                </button>
+                <button
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3"
+                >
+                  Import workflow (JSON)
+                  <Upload size={12} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* SEARCH ICON */}
         <button
@@ -82,10 +236,10 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
               setActiveTab("search");
             }
           }}
-          className={`p-2 rounded-lg transition-colors ${
+          className={`p-2 rounded-sm transition-colors ${
             activeTab === "search" && isOpen
               ? "bg-accent text-black"
-              : "text-[#e5e5e5] hover:bg-[#2a2a2a]"
+              : "text-[#e5e5e5] hover:bg-[#2b2b2f]"
           }`}
           title="Search"
         >
@@ -103,10 +257,10 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
               setActiveTab("quick-access");
             }
           }}
-          className={`p-2 rounded-lg transition-colors ${
+          className={`p-2 rounded-sm transition-colors ${
             activeTab === "quick-access" && isOpen
               ? "bg-accent text-black"
-              : "text-[#e5e5e5] hover:bg-[#2a2a2a]"
+              : "text-[#e5e5e5] hover:bg-[#2b2b2f]"
           }`}
           title="Quick access"
         >

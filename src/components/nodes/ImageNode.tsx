@@ -54,9 +54,12 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
 
   return (
     <div
-      className={` rounded-lg shadow-2xl px-2.5 pt-3 pb-1.5 w-full backdrop-blur-sm group relative ${
+      className={` rounded-lg shadow-2xl px-2.5 pt-3 pb-1.5 w-100 backdrop-blur-sm group relative ${
         selected ? "bg-[#2b2b2f]" : "bg-primary"
       }`}
+      style={{
+        height: aspectRatio ? `${400 * aspectRatio + 40}px` : '480px'
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
@@ -112,27 +115,22 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
       {/* Drop zone / Preview */}
       <div
         onClick={openFilePicker}
-        style={
-          aspectRatio
-            ? { height: `${240 * aspectRatio}px` }
-            : { height: "240px" }
-        }
         className="
           relative
           w-full
+          h-[calc(100%-2.5rem)]
           rounded-md
-          border border-[#3a3a3a]
+          border border-[#3a3a3a]/50
           bg-[linear-gradient(45deg,#1f1f1f_25%,transparent_25%),linear-gradient(-45deg,#1f1f1f_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1f1f1f_75%),linear-gradient(-45deg,transparent_75%,#1f1f1f_75%)]
           bg-size-[20px_20px]
           bg-position-[0_0,0_10px,10px_-10px,-10px_0px]
           flex items-center justify-center
           cursor-pointer
           overflow-hidden
-          transition-[height] duration-200 ease-out
         "
       >
         {!data.previewUrl && (
-          <div className="flex flex-col items-center gap-2 text-[#9ca3af] text-sm">
+          <div className="flex flex-col items-center gap-2 text-white text-xs w-full ">
             <Upload size={18} strokeWidth={1.5} />
             <span>Drag & drop or click to upload</span>
           </div>
