@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { useCallback, useRef, useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { LLMNodeData } from '@/types/nodes';
-import { useFlowStore } from '@/store/flowStore';
-import { aggregateNodeInputsByHandle } from '@/lib/dataFlow';
-import { trpc } from '@/lib/trpc/client';
+import { useCallback, useRef, useState, useEffect } from "react";
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "reactflow";
+import { LLMNodeData } from "@/types/nodes";
+import { useFlowStore } from "@/store/flowStore";
+import { aggregateNodeInputsByHandle } from "@/lib/dataFlow";
+import { trpc } from "@/lib/trpc/client";
+import { MoreHorizontal, MoreVertical, Trash2 } from "lucide-react";
 
 const COLLAPSED_HEIGHT = 260;
 
-function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
+function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
   const updateNode = useFlowStore((state) => state.updateNode);
+  const deleteNode = useFlowStore((state) => state.deleteNode);
   const interactionMode = useFlowStore((state) => state.interactionMode);
   const nodes = useFlowStore((state) => state.nodes);
   const edges = useFlowStore((state) => state.edges);
@@ -18,7 +20,9 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
 
   const outputRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [expandedHeight, setExpandedHeight] = useState<number>(COLLAPSED_HEIGHT);
+  const [expandedHeight, setExpandedHeight] =
+    useState<number>(COLLAPSED_HEIGHT);
+  const [showMenu, setShowMenu] = useState(false);
 
   const imageInputs = data.imageInputs ?? 1;
 
@@ -29,11 +33,14 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
   /* ---------------- RUN MODEL ---------------- */
 
   const handleRun = useCallback(async () => {
-    const { systemPrompt, userMessage, images } =
-      aggregateNodeInputsByHandle(id, nodes, edges);
+    const { systemPrompt, userMessage, images } = aggregateNodeInputsByHandle(
+      id,
+      nodes,
+      edges
+    );
 
     if (!userMessage) {
-      updateNode(id, { error: 'Prompt is required' });
+      updateNode(id, { error: "Prompt is required" });
       return;
     }
 
@@ -46,21 +53,24 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
         inputs: [userMessage, ...images],
       },
       {
-        onSuccess: (result: { success: boolean; output?: string; error?: string }) => {
+        onSuccess: (result: {
+          success: boolean;
+          output?: string;
+          error?: string;
+        }) => {
           if (result.success && result.output) {
-            
             updateNode(id, { isLoading: false, output: result.output });
           } else {
             updateNode(id, {
               isLoading: false,
-              error: result.error || 'Unknown error',
+              error: result.error || "Unknown error",
             });
           }
         },
         onError: (err: unknown) => {
           updateNode(id, {
             isLoading: false,
-            error: err instanceof Error ? err.message : 'Failed to run model',
+            error: err instanceof Error ? err.message : "Failed to run model",
           });
         },
       }
@@ -89,17 +99,58 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
   };
 
   return (
-    <div className="bg-primary rounded-xl shadow-2xl w-90 backdrop-blur-sm relative group">
+    <div
+      className={`rounded-xl shadow-2xl w-90 backdrop-blur-sm relative group ${
+        selected ? "bg-[#2b2b2f]" : "bg-primary"
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="text-xs font-normal text-white">Any LLM</div>
-        <div className="text-[#9ca3af] cursor-pointer">⋯</div>
+
+        {/* Menu Button */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="p-1 hover:bg-[#2a2a2a] rounded"
+          >
+            <MoreHorizontal size={14} className="text-[#9ca3af]" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowMenu(false)}
+              />
+              <div className="absolute right-0 top-6 z-20 bg-[#1a1a1a] border border-[#3a3a3a] rounded-md shadow-lg py-1 min-w-40">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNode(id);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-[#2a2a2a] flex items-center gap-2"
+                >
+                  <Trash2 size={14} />
+                  Delete node
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Output */}
       <div className="px-4 pb-4 pt-2 relative">
         <div
-          className={`group rounded-lg min-h-70 ${isExpanded ? 'overflow-visible' : 'overflow-auto'}`}
+          className={`group rounded-lg min-h-70 ${
+            isExpanded ? "overflow-visible" : "overflow-auto"
+          }`}
           style={{ height: isExpanded ? expandedHeight : COLLAPSED_HEIGHT }}
         >
           <div
@@ -115,12 +166,12 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
               transition-[height]
               duration-200
               min-h-70
-              ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}
+              ${isExpanded ? "overflow-visible" : "overflow-hidden"}
             `}
           >
             {data.isLoading
-              ? 'Running model...'
-              : data.output || 'The generated text will appear here'}
+              ? "Running model..."
+              : data.output || "The generated text will appear here"}
           </div>
 
           {!isExpanded && data.output && (
@@ -158,7 +209,7 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
       <div className="flex items-center justify-between px-4 pb-3 text-xs text-[#9ca3af]">
         <button
           onClick={handleAddImageInput}
-          disabled={interactionMode === 'hand'}
+          disabled={interactionMode === "hand"}
           className="hover:text-white transition-colors hover:bg-primary2 p-1.5 rounded-md"
         >
           + Add another image input
@@ -166,7 +217,7 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
 
         <button
           onClick={handleRun}
-          disabled={data.isLoading || interactionMode === 'hand'}
+          disabled={data.isLoading || interactionMode === "hand"}
           className="
             px-3 py-1.5 rounded-md
             border border-[#3a3a3a]
@@ -185,13 +236,15 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
         type="target"
         position={Position.Left}
         id="user_message"
-        style={{ top: '26%' }}
+        style={{ top: "26%" }}
         className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
         isConnectable={true}
       />
-      <div className="absolute left-[-88px] opacity-0 group-hover:opacity-100
+      <div
+        className="absolute left-[-88px] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
- top-[24%] text-xs text-[#f1a1fb]">
+ top-[24%] text-xs text-[#f1a1fb]"
+      >
         Prompt*
       </div>
 
@@ -200,13 +253,15 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
         type="target"
         position={Position.Left}
         id="system_prompt"
-        style={{ top: '38%' }}
+        style={{ top: "38%" }}
         className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
         isConnectable={true}
       />
-      <div className="absolute left-[-110px] top-[36%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+      <div
+        className="absolute left-[-110px] top-[36%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
-">
+"
+      >
         System Prompt
       </div>
 
@@ -243,9 +298,11 @@ function LLMNode({ id, data }: NodeProps<LLMNodeData>) {
         className="w-3 h-3 bg-[#f1a1fb] border-2 border-[#2a2a2a]"
         isConnectable={true}
       />
-      <div className="absolute right-[-36px] top-[48%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
+      <div
+        className="absolute right-[-36px] top-[48%] text-xs text-[#f1a1fb] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
-">
+"
+      >
         Text
       </div>
     </div>
