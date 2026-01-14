@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { EditableWorkflowName } from "@/components/workflow/EditableWorkflowName";
 import { useFlowStore } from "@/store/flowStore";
+import { ReactFlowProvider } from "reactflow";
 
 // Dynamic import to avoid SSR issues with React Flow
 const FlowCanvas = dynamic(() => import("@/components/flow/FlowCanvas"), {
@@ -68,7 +69,9 @@ export default function FlowPage() {
               <div className="text-sm text-[#9ca3af]">Workflow not found</div>
             )}
           </div>
-          <FlowCanvas />
+          <ReactFlowProvider>
+            <FlowCanvas />
+          </ReactFlowProvider>
         </div>
       </div>
     </div>

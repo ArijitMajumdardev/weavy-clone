@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, DragEvent } from 'react';
+import { useCallback, DragEvent, useEffect } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
@@ -12,6 +12,7 @@ import ReactFlow, {
   applyEdgeChanges,
   BackgroundVariant,
   ConnectionMode,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -43,6 +44,32 @@ export default function FlowCanvas() {
   const setEdges = useFlowStore((state) => state.setEdges);
   const addNode = useFlowStore((state) => state.addNode);
   const pushState = useHistoryStore((state) => state.pushState);
+
+  const { zoomIn, zoomOut, setViewport, getViewport } = useReactFlow();
+
+  // Handle Ctrl+Plus/Minus for canvas zoom
+  useEffect(() => {
+    const handleZoomShortcut = (event: KeyboardEvent) => {
+      // Check for Ctrl/Cmd + Plus/Minus (or Ctrl/Cmd + =)
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === '+' || event.key === '=') {
+          event.preventDefault();
+          zoomIn({ duration: 200 });
+        } else if (event.key === '-') {
+          event.preventDefault();
+          zoomOut({ duration: 200 });
+        } else if (event.key === '0') {
+          // Ctrl+0 to reset zoom to 100%
+          event.preventDefault();
+          const viewport = getViewport();
+          setViewport({ ...viewport, zoom: 1 });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleZoomShortcut);
+    return () => window.removeEventListener('keydown', handleZoomShortcut);
+  }, [zoomIn, zoomOut, getViewport, setViewport]);
 
   // Save state for undo/redo before changes
   const saveStateForHistory = useCallback(() => {
@@ -237,7 +264,7 @@ export default function FlowCanvas() {
         onDrop={onDrop}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-
+        minZoom={0.1}
         deleteKeyCode={['Delete', 'Backspace']}
         multiSelectionKeyCode="Control"
         connectionMode={ConnectionMode.Loose}
