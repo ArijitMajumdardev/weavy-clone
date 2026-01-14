@@ -153,7 +153,7 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         isConnectable={true}
       />
       <div
-        className="absolute right-[-36px] top-[48%] text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
+        className="absolute -right-9 top-[48%] text-xs text-[#6dd6af] opacity-0 group-hover:opacity-100
     transition-opacity duration-150
 "
       >

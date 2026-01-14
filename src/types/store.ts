@@ -19,8 +19,8 @@ export interface HistoryStore {
   past: FlowState[];
   future: FlowState[];
   pushState: (state: FlowState) => void;
-  undo: () => FlowState | null;
-  redo: () => FlowState | null;
+  undo: (currentState: FlowState) => FlowState | null;
+  redo: (currentState: FlowState) => FlowState | null;
   canUndo: () => boolean;
   canRedo: () => boolean;
   clear: () => void;

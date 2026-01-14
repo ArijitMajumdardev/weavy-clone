@@ -5,6 +5,8 @@ import { useFlowStore } from '@/store/flowStore';
 import { useHistoryStore } from '@/store/historyStore';
 
 export function useKeyboardShortcuts() {
+  const nodes = useFlowStore((state) => state.nodes);
+  const edges = useFlowStore((state) => state.edges);
   const setNodes = useFlowStore((state) => state.setNodes);
   const setEdges = useFlowStore((state) => state.setEdges);
   const undo = useHistoryStore((state) => state.undo);
@@ -18,7 +20,8 @@ export function useKeyboardShortcuts() {
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
         event.preventDefault();
         if (canUndo()) {
-          const prevState = undo();
+          const currentState = { nodes, edges };
+          const prevState = undo(currentState);
           if (prevState) {
             setNodes(prevState.nodes);
             setEdges(prevState.edges);
@@ -30,7 +33,8 @@ export function useKeyboardShortcuts() {
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && event.shiftKey) {
         event.preventDefault();
         if (canRedo()) {
-          const nextState = redo();
+          const currentState = { nodes, edges };
+          const nextState = redo(currentState);
           if (nextState) {
             setNodes(nextState.nodes);
             setEdges(nextState.edges);
@@ -41,5 +45,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setNodes, setEdges, undo, redo, canUndo, canRedo]);
+  }, [nodes, edges, setNodes, setEdges, undo, redo, canUndo, canRedo]);
 }

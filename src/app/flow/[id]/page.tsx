@@ -35,10 +35,13 @@ export default function FlowPage() {
   // Load workflow data into the store when fetched
   useEffect(() => {
     if (workflowData) {
-      setNodes(workflowData.nodes as any || []);
-      setEdges(workflowData.edges as any || []);
+      const nodes = (workflowData.nodes || []) as any;
+      const edges = (workflowData.edges || []) as any;
+      setNodes(nodes);
+      setEdges(edges);
     }
-  }, [workflowData, setNodes, setEdges]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowData]);
 
   // Enable auto-save
   useWorkflowAutoSave(workflowId);

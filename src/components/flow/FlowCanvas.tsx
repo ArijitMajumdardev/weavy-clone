@@ -51,7 +51,36 @@ export default function FlowCanvas() {
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      saveStateForHistory();
+      // Determine if we should save history BEFORE applying changes
+      // Only save history for meaningful changes, not selection or dimensions
+      const shouldSaveHistory = changes.some((change) => {
+        // Explicitly ignore all select changes
+        if (change.type === 'select') {
+          return false;
+        }
+        // Explicitly ignore dimension changes
+        if (change.type === 'dimensions') {
+          return false;
+        }
+        // For position changes, only save when drag ends
+        // dragging must be explicitly false (not undefined, not true)
+        if (change.type === 'position') {
+          return change.dragging === false;
+        }
+        // Save history for remove changes (node deletion)
+        if (change.type === 'remove') {
+          return true;
+        }
+        // Ignore add (handled in onDrop), reset, and any other changes
+        return false;
+      });
+
+      // Save the current state BEFORE applying changes
+      if (shouldSaveHistory) {
+        saveStateForHistory();
+      }
+
+      // Now apply the changes
       setNodes(applyNodeChanges(changes, nodes));
     },
     [nodes, setNodes, saveStateForHistory]
@@ -59,7 +88,27 @@ export default function FlowCanvas() {
 
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      saveStateForHistory();
+      // Determine if we should save history BEFORE applying changes
+      // Only save history for meaningful changes, not selection
+      const shouldSaveHistory = changes.some((change) => {
+        // Explicitly ignore all select changes
+        if (change.type === 'select') {
+          return false;
+        }
+        // Save history for add and remove changes
+        if (change.type === 'add' || change.type === 'remove') {
+          return true;
+        }
+        // Ignore reset and other UI-only changes
+        return false;
+      });
+
+      // Save the current state BEFORE applying changes
+      if (shouldSaveHistory) {
+        saveStateForHistory();
+      }
+
+      // Now apply the changes
       setEdges(applyEdgeChanges(changes, edges));
     },
     [edges, setEdges, saveStateForHistory]

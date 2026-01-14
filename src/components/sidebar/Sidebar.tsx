@@ -17,6 +17,7 @@ import {
   Plus,
   Download,
   Upload,
+  Sparkles,
 } from "lucide-react";
 import { EditableWorkflowName } from "@/components/workflow/EditableWorkflowName";
 import { useRouter } from "next/navigation";
@@ -62,7 +63,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     {
       type: NODE_TYPES.LLM_NODE,
       label: NODE_LABELS[NODE_TYPES.LLM_NODE],
-      icon: <Bot size={20} strokeWidth={1} color="white" />,
+      icon: <Sparkles size={20} strokeWidth={1} color="white" />
     },
   ];
 
@@ -326,7 +327,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
           <div className="flex flex-col gap-3 px-4">
             <span className="text-md font-semibold ">Quick access</span>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {filteredNodes.map((node) => (
                 <NodeButton
                   key={node.type}

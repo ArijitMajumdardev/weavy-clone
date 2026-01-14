@@ -13,7 +13,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     future: [], // Clear future on new action
   })),
 
-  undo: () => {
+  undo: (currentState: FlowState) => {
     const { past, future } = get();
     if (past.length === 0) return null;
 
@@ -22,13 +22,13 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
     set({
       past: newPast,
-      future: [previous, ...future],
+      future: [currentState, ...future], // Save CURRENT state to future, not previous
     });
 
     return previous;
   },
 
-  redo: () => {
+  redo: (currentState: FlowState) => {
     const { past, future } = get();
     if (future.length === 0) return null;
 
@@ -36,7 +36,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const newFuture = future.slice(1);
 
     set({
-      past: [...past, next],
+      past: [...past, currentState], // Save CURRENT state to past, not next
       future: newFuture,
     });
 

@@ -13,6 +13,8 @@ export default function FloatingDock() {
 
   const interactionMode = useFlowStore((state) => state.interactionMode);
   const setInteractionMode = useFlowStore((state) => state.setInteractionMode);
+  const nodes = useFlowStore((state) => state.nodes);
+  const edges = useFlowStore((state) => state.edges);
   const setNodes = useFlowStore((state) => state.setNodes);
   const setEdges = useFlowStore((state) => state.setEdges);
 
@@ -34,20 +36,22 @@ export default function FloatingDock() {
   }, [getZoom]);
 
   const handleUndo = useCallback(() => {
-    const prevState = undo();
+    const currentState = { nodes, edges };
+    const prevState = undo(currentState);
     if (prevState) {
       setNodes(prevState.nodes);
       setEdges(prevState.edges);
     }
-  }, [undo, setNodes, setEdges]);
+  }, [undo, nodes, edges, setNodes, setEdges]);
 
   const handleRedo = useCallback(() => {
-    const nextState = redo();
+    const currentState = { nodes, edges };
+    const nextState = redo(currentState);
     if (nextState) {
       setNodes(nextState.nodes);
       setEdges(nextState.edges);
     }
-  }, [redo, setNodes, setEdges]);
+  }, [redo, nodes, edges, setNodes, setEdges]);
 
   const handleZoomChange = useCallback((zoomLevel: number) => {
     const viewport = getViewport();
@@ -116,7 +120,7 @@ export default function FloatingDock() {
         <div className="relative">
           <button
             onClick={() => setShowZoomMenu(!showZoomMenu)}
-            className="px-3  text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all flex items-center gap-2 min-w-[80px]"
+            className="px-3  text-[#e5e5e5] hover:bg-[#2a2a2a] rounded-lg transition-all flex items-center gap-2 min-w-20"
           >
             <span className="text-sm font-medium">{zoom}%</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +130,7 @@ export default function FloatingDock() {
 
           {/* Zoom Dropdown */}
           {showZoomMenu && (
-            <div className="absolute bottom-full mb-2 left-0 bg-[#232323] border border-[#3a3a3a] rounded-lg shadow-2xl py-1 min-w-[100px]">
+            <div className="absolute bottom-full mb-2 left-0 bg-[#232323] border border-[#3a3a3a] rounded-lg shadow-2xl py-1 min-w-25">
               {zoomLevels.map((level) => (
                 <button
                   key={level}
