@@ -16,7 +16,13 @@ export function EditableWorkflowName({
   const [name, setName] = useState(initialName);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const updateNameMutation = trpc.workflow.updateName.useMutation();
+  const utils = trpc.useUtils();
+  const updateNameMutation = trpc.workflow.updateName.useMutation({
+    onSuccess: () => {
+      // Invalidate the workflow query to refetch updated data
+      utils.workflow.get.invalidate({ id: workflowId });
+    },
+  });
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -24,6 +30,11 @@ export function EditableWorkflowName({
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  // Sync local state when initialName prop changes (after cache invalidation)
+  useEffect(() => {
+    setName(initialName);
+  }, [initialName]);
 
   const handleClick = () => {
     setIsEditing(true);
