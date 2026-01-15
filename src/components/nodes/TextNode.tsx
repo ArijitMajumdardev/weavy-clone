@@ -20,7 +20,6 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showMenu, setShowMenu] = useState(false);
 
-  // Auto-resize textarea
   const resizeTextarea = () => {
     const el = textareaRef.current;
     if (!el) return;
@@ -38,7 +37,6 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
     [id, updateNode]
   );
 
-  // Resize on mount & when content changes externally
   useEffect(() => {
     resizeTextarea();
   }, [data.content]);
@@ -52,7 +50,6 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
       <div className="flex items-center justify-between mb-2">
         <div className="font-normal text-xs text-[#e5e5e5]">{data.label}</div>
 
-        {/* Menu Button */}
         <div className="relative">
           <button
             onClick={(e) => {
@@ -64,7 +61,6 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
             <MoreHorizontal size={14} className="text-[#9ca3af]" />
           </button>
 
-          {/* Dropdown Menu */}
           {showMenu && (
             <>
               <div
@@ -98,7 +94,6 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
         className="w-full min-h-30 overflow-hidden p-3 bg-primary2 border border-[#3a3a3a] rounded-md resize-none text-sm text-[#e5e5e5] placeholder-[#6b7280] focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       />
 
-      {/* Output handle */}
       <Handle
         type="source"
         position={Position.Right}

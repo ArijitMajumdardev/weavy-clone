@@ -1,21 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { trpc } from '@/lib/trpc/client';
+import { useState, useRef, useEffect } from "react";
+import { trpc } from "@/lib/trpc/client";
 
 interface EditableWorkflowNameProps {
   workflowId: string;
   initialName: string;
 }
 
-export function EditableWorkflowName({ workflowId, initialName }: EditableWorkflowNameProps) {
+export function EditableWorkflowName({
+  workflowId,
+  initialName,
+}: EditableWorkflowNameProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(initialName);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const updateNameMutation = trpc.workflow.updateName.useMutation();
 
-  // Focus input when entering edit mode
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -30,28 +32,26 @@ export function EditableWorkflowName({ workflowId, initialName }: EditableWorkfl
   const handleBlur = async () => {
     setIsEditing(false);
 
-    // Only update if name changed
-    if (name.trim() !== initialName && name.trim() !== '') {
+    if (name.trim() !== initialName && name.trim() !== "") {
       try {
         await updateNameMutation.mutateAsync({
           id: workflowId,
           name: name.trim(),
         });
       } catch (error) {
-        console.error('Failed to update workflow name:', error);
-        // Revert to initial name on error
+        console.error("Failed to update workflow name:", error);
+
         setName(initialName);
       }
-    } else if (name.trim() === '') {
-      // Revert to initial name if empty
+    } else if (name.trim() === "") {
       setName(initialName);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       inputRef.current?.blur();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setName(initialName);
       setIsEditing(false);
     }

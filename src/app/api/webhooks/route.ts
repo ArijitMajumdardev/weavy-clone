@@ -13,11 +13,9 @@ export async function POST(req: NextRequest) {
       `Received webhook with ID ${id} and event type of ${eventType}`
     );
 
-    // Handle user creation
     if (evt.type === "user.created") {
       const { id, email_addresses, first_name, last_name, username, image_url } = evt.data;
 
-      // Get primary email address
       const primaryEmail = email_addresses?.find(
         (email: any) => email.id === evt.data.primary_email_address_id
       )?.email_address || email_addresses?.[0]?.email_address;
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
         return new Response("No email address found", { status: 400 });
       }
 
-      // Create user in database
       await prisma.user.create({
         data: {
           id: id as string,
@@ -42,7 +39,6 @@ export async function POST(req: NextRequest) {
       console.log(`User created in database: ${id}`);
     }
 
-    // Handle user updates
     if (evt.type === "user.updated") {
       const { id, email_addresses, first_name, last_name, username, image_url } = evt.data;
 
@@ -66,7 +62,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Handle user deletion
     if (evt.type === "user.deleted") {
       await prisma.user.delete({
         where: { id: id as string },

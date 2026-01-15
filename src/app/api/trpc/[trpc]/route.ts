@@ -2,10 +2,6 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from '@/server/routers/_app';
 import { createContext } from '@/server/context';
 
-/**
- * tRPC API handler for App Router
- * Handles all tRPC requests
- */
 const handler = async (req: Request) => {
   try {
     return await fetchRequestHandler({

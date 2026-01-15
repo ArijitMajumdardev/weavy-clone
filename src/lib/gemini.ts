@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// This will be used server-side only
+
 export const getGeminiClient = () => {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {

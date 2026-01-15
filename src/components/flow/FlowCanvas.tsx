@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, DragEvent, useEffect } from 'react';
+import { useCallback, DragEvent, useEffect } from "react";
 import ReactFlow, {
   Background,
   MiniMap,
@@ -13,18 +13,22 @@ import ReactFlow, {
   BackgroundVariant,
   ConnectionMode,
   useReactFlow,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import "reactflow/dist/style.css";
 
-import TextNode from '@/components/nodes/TextNode';
-import ImageNode from '@/components/nodes/ImageNode';
-import LLMNode from '@/components/nodes/LLMNode';
-import CustomEdge from './CustomEdge';
-import FloatingDock from './FloatingDock';
+import TextNode from "@/components/nodes/TextNode";
+import ImageNode from "@/components/nodes/ImageNode";
+import LLMNode from "@/components/nodes/LLMNode";
+import CustomEdge from "./CustomEdge";
+import FloatingDock from "./FloatingDock";
 
-import { useFlowStore } from '@/store/flowStore';
-import { useHistoryStore } from '@/store/historyStore';
-import { createTextNode, createImageNode, createLLMNode } from '@/lib/nodeUtils';
+import { useFlowStore } from "@/store/flowStore";
+import { useHistoryStore } from "@/store/historyStore";
+import {
+  createTextNode,
+  createImageNode,
+  createLLMNode,
+} from "@/lib/nodeUtils";
 
 const nodeTypes = {
   textNode: TextNode,
@@ -47,19 +51,16 @@ export default function FlowCanvas() {
 
   const { zoomIn, zoomOut, setViewport, getViewport } = useReactFlow();
 
-  // Handle Ctrl+Plus/Minus for canvas zoom
   useEffect(() => {
     const handleZoomShortcut = (event: KeyboardEvent) => {
-      // Check for Ctrl/Cmd + Plus/Minus (or Ctrl/Cmd + =)
       if (event.ctrlKey || event.metaKey) {
-        if (event.key === '+' || event.key === '=') {
+        if (event.key === "+" || event.key === "=") {
           event.preventDefault();
           zoomIn({ duration: 200 });
-        } else if (event.key === '-') {
+        } else if (event.key === "-") {
           event.preventDefault();
           zoomOut({ duration: 200 });
-        } else if (event.key === '0') {
-          // Ctrl+0 to reset zoom to 100%
+        } else if (event.key === "0") {
           event.preventDefault();
           const viewport = getViewport();
           setViewport({ ...viewport, zoom: 1 });
@@ -67,47 +68,40 @@ export default function FlowCanvas() {
       }
     };
 
-    window.addEventListener('keydown', handleZoomShortcut);
-    return () => window.removeEventListener('keydown', handleZoomShortcut);
+    window.addEventListener("keydown", handleZoomShortcut);
+    return () => window.removeEventListener("keydown", handleZoomShortcut);
   }, [zoomIn, zoomOut, getViewport, setViewport]);
 
-  // Save state for undo/redo before changes
   const saveStateForHistory = useCallback(() => {
     pushState({ nodes, edges });
   }, [nodes, edges, pushState]);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      // Determine if we should save history BEFORE applying changes
-      // Only save history for meaningful changes, not selection or dimensions
       const shouldSaveHistory = changes.some((change) => {
-        // Explicitly ignore all select changes
-        if (change.type === 'select') {
+        if (change.type === "select") {
           return false;
         }
-        // Explicitly ignore dimension changes
-        if (change.type === 'dimensions') {
+
+        if (change.type === "dimensions") {
           return false;
         }
-        // For position changes, only save when drag ends
-        // dragging must be explicitly false (not undefined, not true)
-        if (change.type === 'position') {
+
+        if (change.type === "position") {
           return change.dragging === false;
         }
-        // Save history for remove changes (node deletion)
-        if (change.type === 'remove') {
+
+        if (change.type === "remove") {
           return true;
         }
-        // Ignore add (handled in onDrop), reset, and any other changes
+
         return false;
       });
 
-      // Save the current state BEFORE applying changes
       if (shouldSaveHistory) {
         saveStateForHistory();
       }
 
-      // Now apply the changes
       setNodes(applyNodeChanges(changes, nodes));
     },
     [nodes, setNodes, saveStateForHistory]
@@ -115,27 +109,22 @@ export default function FlowCanvas() {
 
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      // Determine if we should save history BEFORE applying changes
-      // Only save history for meaningful changes, not selection
       const shouldSaveHistory = changes.some((change) => {
-        // Explicitly ignore all select changes
-        if (change.type === 'select') {
+        if (change.type === "select") {
           return false;
         }
-        // Save history for add and remove changes
-        if (change.type === 'add' || change.type === 'remove') {
+
+        if (change.type === "add" || change.type === "remove") {
           return true;
         }
-        // Ignore reset and other UI-only changes
+
         return false;
       });
 
-      // Save the current state BEFORE applying changes
       if (shouldSaveHistory) {
         saveStateForHistory();
       }
 
-      // Now apply the changes
       setEdges(applyEdgeChanges(changes, edges));
     },
     [edges, setEdges, saveStateForHistory]
@@ -152,27 +141,24 @@ export default function FlowCanvas() {
       const targetType = targetNode.type;
       const targetHandle = connection.targetHandle;
 
-      // Rule 1: Image node can ONLY connect to image inputs (images_0, images_1, etc.)
-      if (sourceType === 'imageNode') {
-        if (!targetHandle?.startsWith('images_')) {
-          return false; // Image node cannot connect to text inputs
+      if (sourceType === "imageNode") {
+        if (!targetHandle?.startsWith("images_")) {
+          return false;
         }
       }
 
-      // Rule 2: Text node can ONLY connect to text inputs (user_message, system_prompt)
-      if (sourceType === 'textNode') {
-        if (targetHandle?.startsWith('images_')) {
-          return false; // Text node cannot connect to image inputs
+      if (sourceType === "textNode") {
+        if (targetHandle?.startsWith("images_")) {
+          return false;
         }
       }
 
-      // Rule 3: LLM node output can ONLY connect to another LLM node's text inputs
-      if (sourceType === 'llmNode') {
-        if (targetType !== 'llmNode') {
-          return false; // LLM node can only connect to another LLM node
+      if (sourceType === "llmNode") {
+        if (targetType !== "llmNode") {
+          return false;
         }
-        if (targetHandle?.startsWith('images_')) {
-          return false; // LLM node cannot connect to image inputs
+        if (targetHandle?.startsWith("images_")) {
+          return false;
         }
       }
 
@@ -185,15 +171,11 @@ export default function FlowCanvas() {
     (connection) => {
       saveStateForHistory();
 
-      // Find the source node to determine its type
       const sourceNode = nodes.find((node) => node.id === connection.source);
       const sourceType = sourceNode?.type;
 
-      // Check if this is an image input handle on LLM node
-      // Only one connection allowed per image input handle
       let updatedEdges = edges;
-      if (connection.targetHandle?.startsWith('images_')) {
-        // Remove any existing edge connected to this specific image input handle
+      if (connection.targetHandle?.startsWith("images_")) {
         updatedEdges = edges.filter(
           (edge) =>
             !(
@@ -205,8 +187,10 @@ export default function FlowCanvas() {
 
       const edge = {
         ...connection,
-        id: `${connection.source}-${connection.sourceHandle || 'default'}-${connection.target}-${connection.targetHandle || 'default'}`,
-        type: 'custom',
+        id: `${connection.source}-${connection.sourceHandle || "default"}-${
+          connection.target
+        }-${connection.targetHandle || "default"}`,
+        type: "custom",
         animated: false,
         data: {
           sourceType,
@@ -219,14 +203,14 @@ export default function FlowCanvas() {
 
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData('application/reactflow');
+      const type = event.dataTransfer.getData("application/reactflow");
       if (!type) return;
 
       const reactFlowBounds = event.currentTarget.getBoundingClientRect();
@@ -236,11 +220,11 @@ export default function FlowCanvas() {
       };
 
       let newNode;
-      if (type === 'textNode') {
+      if (type === "textNode") {
         newNode = createTextNode(position);
-      } else if (type === 'imageNode') {
+      } else if (type === "imageNode") {
         newNode = createImageNode(position);
-      } else if (type === 'llmNode') {
+      } else if (type === "llmNode") {
         newNode = createLLMNode(position);
       }
 
@@ -265,18 +249,17 @@ export default function FlowCanvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         minZoom={0.1}
-        deleteKeyCode={['Delete', 'Backspace']}
+        deleteKeyCode={["Delete", "Backspace"]}
         multiSelectionKeyCode="Control"
         connectionMode={ConnectionMode.Loose}
         isValidConnection={isValidConnection}
-        panOnDrag={interactionMode === 'hand'}
-        nodesDraggable={interactionMode === 'cursor'}
-        nodesConnectable={interactionMode === 'cursor'}
-        elementsSelectable={interactionMode === 'cursor'}
-        edgesFocusable={interactionMode === 'cursor'}
+        nodesDraggable={interactionMode === "cursor"}
+        nodesConnectable={interactionMode === "cursor"}
+        elementsSelectable={interactionMode === "cursor"}
+        edgesFocusable={interactionMode === "cursor"}
         connectOnClick={false}
         defaultEdgeOptions={{
-          style: { stroke: '#f1a1fb', strokeWidth: 2 },
+          style: { stroke: "#f1a1fb", strokeWidth: 2 },
           animated: false,
         }}
       >
@@ -285,14 +268,14 @@ export default function FlowCanvas() {
           gap={20}
           size={1.5}
           color="#3a3a3a"
-          style={{ backgroundColor: 'black' }}
+          style={{ backgroundColor: "black" }}
         />
-        {/* <Controls className="bg-[#232323] border border-[#3a3a3a]" /> */}
+
         <MiniMap
           nodeColor={(node) => {
-            if (node.type === 'llmNode') return '#a855f7';
-            if (node.type === 'imageNode') return '#06b6d4';
-            return '#6b7280';
+            if (node.type === "llmNode") return "#a855f7";
+            if (node.type === "imageNode") return "#06b6d4";
+            return "#6b7280";
           }}
           className="bg-[#232323] border border-[#3a3a3a]"
           maskColor="rgba(26, 26, 26, 0.8)"

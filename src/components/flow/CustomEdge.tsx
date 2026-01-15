@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { EdgeProps, getBezierPath } from 'reactflow';
+import { memo } from "react";
+import { EdgeProps, getBezierPath } from "reactflow";
 
 function CustomEdge({
   id,
@@ -23,22 +23,17 @@ function CustomEdge({
     targetPosition,
   });
 
-  // Determine edge color based on source node type
-  // Text nodes: #f1a1fb (pink)
-  // Image nodes: #6dd6af (green)
   const getEdgeColor = () => {
-    if (data?.sourceType === 'imageNode') {
-      return '#6dd6af';
+    if (data?.sourceType === "imageNode") {
+      return "#6dd6af";
     }
-    // Default to text color for textNode and llmNode (both output text)
-    return '#f1a1fb';
+    return "#f1a1fb";
   };
 
   const edgeColor = getEdgeColor();
 
   return (
     <>
-      {/* Invisible wider path for easier clicking */}
       <path
         d={edgePath}
         strokeWidth={20}
@@ -47,10 +42,8 @@ function CustomEdge({
         className="react-flow__edge-interaction"
       />
 
-      {/* Visible edge path */}
       <path
         id={id}
-       
         d={edgePath}
         strokeWidth={selected ? 3 : 2}
         stroke={edgeColor}

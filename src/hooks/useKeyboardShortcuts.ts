@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useFlowStore } from '@/store/flowStore';
-import { useHistoryStore } from '@/store/historyStore';
+import { useEffect } from "react";
+import { useFlowStore } from "@/store/flowStore";
+import { useHistoryStore } from "@/store/historyStore";
 
 export function useKeyboardShortcuts() {
   const nodes = useFlowStore((state) => state.nodes);
@@ -16,8 +16,11 @@ export function useKeyboardShortcuts() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ctrl+Z or Cmd+Z for Undo
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "z" &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         if (canUndo()) {
           const currentState = { nodes, edges };
@@ -29,8 +32,11 @@ export function useKeyboardShortcuts() {
         }
       }
 
-      // Ctrl+Shift+Z or Cmd+Shift+Z for Redo
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && event.shiftKey) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "z" &&
+        event.shiftKey
+      ) {
         event.preventDefault();
         if (canRedo()) {
           const currentState = { nodes, edges };
@@ -43,7 +49,7 @@ export function useKeyboardShortcuts() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nodes, edges, setNodes, setEdges, undo, redo, canUndo, canRedo]);
 }

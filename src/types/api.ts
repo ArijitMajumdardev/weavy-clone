@@ -1,12 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const LLMRequestSchema = z.object({
   model: z.string(),
   systemPrompt: z.string().optional(),
-  inputs: z.array(z.object({
-    type: z.enum(['text', 'image']),
-    content: z.string(),
-  })),
+  inputs: z.array(
+    z.object({
+      type: z.enum(["text", "image"]),
+      content: z.string(),
+    })
+  ),
 });
 
 export const LLMResponseSchema = z.object({

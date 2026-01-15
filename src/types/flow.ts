@@ -1,5 +1,5 @@
-import { Node, Edge } from 'reactflow';
-import { NodeData } from './nodes';
+import { Node, Edge } from "reactflow";
+import { NodeData } from "./nodes";
 
 export type FlowNode = Node<NodeData>;
 export type FlowEdge = Edge;

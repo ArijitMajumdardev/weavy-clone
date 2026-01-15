@@ -1,4 +1,4 @@
-export type NodeType = 'textNode' | 'imageNode' | 'llmNode';
+export type NodeType = "textNode" | "imageNode" | "llmNode";
 
 export interface BaseNodeData {
   id: string;
@@ -6,13 +6,13 @@ export interface BaseNodeData {
 }
 
 export interface TextNodeData extends BaseNodeData {
-  type: 'textNode';
+  type: "textNode";
   content: string;
   output: string;
 }
 
 export interface ImageNodeData extends BaseNodeData {
-  type: 'imageNode';
+  type: "imageNode";
   previewUrl: string | null;
   output: {
     url: string;
@@ -22,7 +22,7 @@ export interface ImageNodeData extends BaseNodeData {
 }
 
 export interface LLMNodeData extends BaseNodeData {
-  type: 'llmNode';
+  type: "llmNode";
   model: string;
   isLoading: boolean;
   output: string | null;

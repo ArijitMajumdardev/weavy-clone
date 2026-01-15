@@ -6,7 +6,7 @@ import { LLMNodeData } from "@/types/nodes";
 import { useFlowStore } from "@/store/flowStore";
 import { aggregateNodeInputsByHandle } from "@/lib/dataFlow";
 import { trpc } from "@/lib/trpc/client";
-import { MoreHorizontal, MoreVertical, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 
 const COLLAPSED_HEIGHT = 380;
 
@@ -26,11 +26,7 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
 
   const imageInputs = data.imageInputs ?? 1;
 
-  /* ---------------- TRPC MUTATION ---------------- */
-
   const generateContentMutation = trpc.llm.generateContent.useMutation();
-
-  /* ---------------- RUN MODEL ---------------- */
 
   const handleRun = useCallback(async () => {
     const { systemPrompt, userMessage, images } = aggregateNodeInputsByHandle(
@@ -77,22 +73,18 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
     );
   }, [id, data.model, nodes, edges, updateNode, generateContentMutation]);
 
-  /* ---------------- EXPAND OUTPUT ---------------- */
-
   useEffect(() => {
     if (outputRef.current && isExpanded) {
       setExpandedHeight(outputRef.current.scrollHeight + 24);
     }
   }, [isExpanded, data.output]);
 
-  /* ---------------- ADD IMAGE INPUT ---------------- */
-
   const handleAddImageInput = () => {
     const newCount = imageInputs + 1;
     updateNode(id, {
       imageInputs: newCount,
     });
-    // Tell ReactFlow to re-scan and register the new handles
+
     setTimeout(() => {
       updateNodeInternals(id);
     }, 0);
@@ -104,11 +96,9 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         selected ? "bg-[#2b2b2f]" : "bg-primary"
       }`}
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="text-xs font-normal text-white">Any LLM</div>
 
-        {/* Menu Button */}
         <div className="relative">
           <button
             onClick={(e) => {
@@ -120,7 +110,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
             <MoreHorizontal size={14} className="text-[#9ca3af]" />
           </button>
 
-          {/* Dropdown Menu */}
           {showMenu && (
             <>
               <div
@@ -145,7 +134,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         </div>
       </div>
 
-      {/* Output */}
       <div className="px-4 pb-4 pt-2 relative">
         <div
           className={`group rounded-lg min-h-95  ${
@@ -205,7 +193,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         </div>
       </div>
 
-      {/* Bottom actions */}
       <div className="flex items-center justify-between px-4 pb-3 text-xs text-[#9ca3af]">
         <button
           onClick={handleAddImageInput}
@@ -229,9 +216,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         </button>
       </div>
 
-      {/* ---------------- INPUT HANDLES ---------------- */}
-
-      {/* Prompt */}
       <Handle
         type="target"
         position={Position.Left}
@@ -248,7 +232,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         Prompt*
       </div>
 
-      {/* System Prompt */}
       <Handle
         type="target"
         position={Position.Left}
@@ -265,7 +248,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         System Prompt
       </div>
 
-      {/* Dynamic Image Inputs */}
       {Array.from({ length: imageInputs }).map((_, index) => {
         const top = 50 + index * 10;
 
@@ -291,7 +273,6 @@ function LLMNode({ id, data, selected }: NodeProps<LLMNodeData>) {
         );
       })}
 
-      {/* Output */}
       <Handle
         type="source"
         position={Position.Right}

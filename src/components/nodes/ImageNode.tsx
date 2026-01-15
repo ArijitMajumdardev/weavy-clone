@@ -4,7 +4,7 @@ import { memo, useCallback, ChangeEvent, useRef, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { ImageNodeData } from "@/types/nodes";
 import { useFlowStore } from "@/store/flowStore";
-import { Upload, MoreVertical, Trash2, MoreHorizontal } from "lucide-react";
+import { Upload, Trash2, MoreHorizontal } from "lucide-react";
 
 function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
   const updateNode = useFlowStore((state) => state.updateNode);
@@ -58,14 +58,12 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         selected ? "bg-[#2b2b2f]" : "bg-primary"
       }`}
       style={{
-        height: aspectRatio ? `${400 * aspectRatio + 40}px` : '480px'
+        height: aspectRatio ? `${400 * aspectRatio + 40}px` : "480px",
       }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="font-normal text-xs text-[#e5e5e5]">{data.label}</div>
 
-        {/* Menu Button */}
         <div className="relative">
           <button
             onClick={(e) => {
@@ -77,7 +75,6 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
             <MoreHorizontal size={14} className="text-[#9ca3af]" />
           </button>
 
-          {/* Dropdown Menu */}
           {showMenu && (
             <>
               <div
@@ -102,7 +99,6 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         </div>
       </div>
 
-      {/* Hidden input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -112,7 +108,6 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         disabled={interactionMode === "hand"}
       />
 
-      {/* Drop zone / Preview */}
       <div
         onClick={openFilePicker}
         className="
@@ -145,7 +140,6 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         )}
       </div>
 
-      {/* Output handle */}
       <Handle
         type="source"
         position={Position.Right}

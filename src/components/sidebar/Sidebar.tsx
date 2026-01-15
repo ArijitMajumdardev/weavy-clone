@@ -6,15 +6,12 @@ import { NODE_TYPES, NODE_LABELS } from "@/constants/nodeTypes";
 import { useHistoryStore } from "@/store/historyStore";
 import { useFlowStore } from "@/store/flowStore";
 import {
-  Bot,
   ChevronDown,
   FileImage,
   History,
   Search,
   SearchIcon,
   Type,
-  FolderOpen,
-  Plus,
   Download,
   Upload,
   Sparkles,
@@ -41,7 +38,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const past = useHistoryStore((state) => state.past);
   const nodes = useFlowStore((state) => state.nodes);
   const edges = useFlowStore((state) => state.edges);
   const setNodes = useFlowStore((state) => state.setNodes);
@@ -63,7 +59,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     {
       type: NODE_TYPES.LLM_NODE,
       label: NODE_LABELS[NODE_TYPES.LLM_NODE],
-      icon: <Sparkles size={20} strokeWidth={1} color="white" />
+      icon: <Sparkles size={20} strokeWidth={1} color="white" />,
     },
   ];
 
@@ -71,13 +67,11 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     node.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle back to files
   const handleBackToFiles = () => {
     router.push("/");
     setShowDropdown(false);
   };
 
-  // Handle create new workflow
   const handleCreateNewWorkflow = async () => {
     const newWorkflowId = nanoid();
     try {
@@ -93,7 +87,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     }
   };
 
-  // Handle export workflow
   const handleExportWorkflow = () => {
     if (!workflowId) return;
 
@@ -118,7 +111,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     setShowDropdown(false);
   };
 
-  // Handle import workflow
   const handleImportWorkflow = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -142,13 +134,12 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
       }
     };
     reader.readAsText(file);
-    // Reset file input
+
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  // Focus search input ONLY when search tab opens
   useEffect(() => {
     if (isOpen && activeTab === "search") {
       requestAnimationFrame(() => {
@@ -159,9 +150,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
 
   return (
     <>
-      {/* LEFT ICON BAR */}
       <div className="fixed left-0 top-0 h-full w-14 bg-primary border-r border-[#3a3a3a]/50 z-50 flex flex-col gap-4 p-2 py-4">
-        {/* Hidden file input for import */}
         <input
           ref={fileInputRef}
           type="file"
@@ -170,7 +159,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
           className="hidden"
         />
 
-        {/* Logo Dropdown Button */}
         <div className="relative mb-6">
           <button
             onClick={() => setShowDropdown(!showDropdown)}
@@ -180,7 +168,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
             <ChevronDown size={12} strokeWidth={1.2} color="white" />
           </button>
 
-          {/* Dropdown Menu */}
           {showDropdown && (
             <>
               <div
@@ -226,7 +213,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
           )}
         </div>
 
-        {/* SEARCH ICON */}
         <button
           onClick={() => {
             if (isOpen && activeTab === "search") {
@@ -247,7 +233,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
           <Search strokeWidth={1} size={20} />
         </button>
 
-        {/* QUICK ACCESS ICON */}
         <button
           onClick={() => {
             if (isOpen && activeTab === "quick-access") {
@@ -269,7 +254,6 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
         </button>
       </div>
 
-      {/* SLIDING SIDEBAR */}
       <div
         className={`
           fixed top-0 left-14 h-full w-60
@@ -290,12 +274,9 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
             </div>
           )}
 
-          {/* SEARCH BAR */}
-
           <div className="border-y border-[#3a3a3a]/30 w-full p-4 ">
-
-          <div
-            className="
+            <div
+              className="
     flex flex-row items-center gap-2
     rounded-sm
     border border-[#3a3a3a]
@@ -303,15 +284,19 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
     transition-colors duration-150 ease-out
     focus-within:border-accent/50
   "
-          >
-            <SearchIcon strokeWidth={1} size={14} className="text-[#9ca3af]" />
+            >
+              <SearchIcon
+                strokeWidth={1}
+                size={14}
+                className="text-[#9ca3af]"
+              />
 
-            <input
-              ref={searchInputRef}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search"
-              className="
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search"
+                className="
       w-full bg-transparent
       border-none
       py-0.5 text-xs text-white
@@ -319,11 +304,10 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
       placeholder:text-[#9ca3af]
       placeholder:text-xs
     "
-            />
+              />
             </div>
-            </div>
+          </div>
 
-          {/* QUICK ACCESS */}
           <div className="flex flex-col gap-3 px-4">
             <span className="text-md font-semibold ">Quick access</span>
 

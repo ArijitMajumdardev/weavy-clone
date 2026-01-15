@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { HistoryStore } from '@/types/store';
-import { FlowState } from '@/types/flow';
+import { create } from "zustand";
+import { HistoryStore } from "@/types/store";
+import { FlowState } from "@/types/flow";
 
 const MAX_HISTORY = 50;
 
@@ -8,10 +8,11 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   past: [],
   future: [],
 
-  pushState: (state: FlowState) => set((prev) => ({
-    past: [...prev.past.slice(-MAX_HISTORY + 1), state],
-    future: [], // Clear future on new action
-  })),
+  pushState: (state: FlowState) =>
+    set((prev) => ({
+      past: [...prev.past.slice(-MAX_HISTORY + 1), state],
+      future: [],
+    })),
 
   undo: (currentState: FlowState) => {
     const { past, future } = get();
@@ -22,7 +23,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
     set({
       past: newPast,
-      future: [currentState, ...future], // Save CURRENT state to future, not previous
+      future: [currentState, ...future],
     });
 
     return previous;
@@ -36,7 +37,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const newFuture = future.slice(1);
 
     set({
-      past: [...past, currentState], // Save CURRENT state to past, not next
+      past: [...past, currentState],
       future: newFuture,
     });
 
