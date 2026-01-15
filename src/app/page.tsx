@@ -88,7 +88,8 @@ export default function Home() {
 
         <button
           onClick={handleCreateWorkflow}
-          className="mb-6 cursor-pointer flex items-center justify-center gap-1 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm hover:opacity-90"
+          disabled={createWorkflowMutation.isPending}
+          className="mb-6 cursor-pointer flex items-center justify-center gap-1 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus size={16} /> Create New File
         </button>
@@ -101,7 +102,8 @@ export default function Home() {
 
           <button
             onClick={handleCreateWorkflow}
-            className="flex cursor-pointer items-center gap-2 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm"
+            disabled={createWorkflowMutation.isPending}
+            className="flex cursor-pointer items-center gap-2 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={16} /> Create New File
           </button>

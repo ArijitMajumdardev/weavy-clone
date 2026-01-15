@@ -185,7 +185,8 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
 
                 <button
                   onClick={handleCreateNewWorkflow}
-                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
+                  disabled={createWorkflowMutation.isPending}
+                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create new workflow
                 </button>
