@@ -88,7 +88,7 @@ export default function Home() {
 
         <button
           onClick={handleCreateWorkflow}
-          className="mb-6 flex items-center justify-center gap-1 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm hover:opacity-90"
+          className="mb-6 cursor-pointer flex items-center justify-center gap-1 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm hover:opacity-90"
         >
           <Plus size={16} /> Create New File
         </button>
@@ -101,7 +101,7 @@ export default function Home() {
 
           <button
             onClick={handleCreateWorkflow}
-            className="flex items-center gap-2 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm"
+            className="flex cursor-pointer items-center gap-2 bg-[#f4fcb0] text-black text-sm px-3 py-1.5 rounded-sm"
           >
             <Plus size={16} /> Create New File
           </button>

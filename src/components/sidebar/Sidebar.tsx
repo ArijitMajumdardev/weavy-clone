@@ -177,7 +177,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
               <div className="absolute left-0 top-7 z-20 bg-primary border border-[#3a3a3a] rounded-md shadow-xl p-2 min-w-60">
                 <button
                   onClick={handleBackToFiles}
-                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
+                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
                 >
                   Back to files
                 </button>
@@ -185,7 +185,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
 
                 <button
                   onClick={handleCreateNewWorkflow}
-                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
+                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex items-center gap-3"
                 >
                   Create new workflow
                 </button>
@@ -193,7 +193,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
                 <button
                   onClick={handleExportWorkflow}
                   disabled={!workflowId}
-                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Export workflow (JSON)
                   <Download size={12} />
@@ -203,7 +203,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
                     fileInputRef.current?.click();
                     setShowDropdown(false);
                   }}
-                  className="w-full rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3"
+                  className="w-full cursor-pointer rounded-sm px-3 py-2 text-left text-xs text-white hover:bg-[#2a2a2a] flex justify-between items-center gap-3"
                 >
                   Import workflow (JSON)
                   <Upload size={12} />
@@ -223,7 +223,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
               setActiveTab("search");
             }
           }}
-          className={`p-2 rounded-sm transition-colors ${
+          className={`p-2 cursor-pointer rounded-sm transition-colors ${
             activeTab === "search" && isOpen
               ? "bg-accent text-black"
               : "text-[#e5e5e5] hover:bg-[#2b2b2f]"
@@ -243,7 +243,7 @@ export default function Sidebar({ workflowId, workflowName }: SidebarProps) {
               setActiveTab("quick-access");
             }
           }}
-          className={`p-2 rounded-sm transition-colors ${
+          className={`p-2 cursor-pointer rounded-sm transition-colors ${
             activeTab === "quick-access" && isOpen
               ? "bg-accent text-black"
               : "text-[#e5e5e5] hover:bg-[#2b2b2f]"
