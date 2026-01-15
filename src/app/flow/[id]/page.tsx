@@ -33,12 +33,11 @@ export default function FlowPage() {
 
   useEffect(() => {
     if (workflowData) {
-      const nodes: any = workflowData ? (workflowData.nodes as any) : [];
-      const edges: any = workflowData ? (workflowData.edges as any) : [];
-      setNodes(nodes);
-      setEdges(edges);
+      const data = workflowData as any;
+      setNodes(data.nodes ?? []);
+      setEdges(data.edges ?? []);
     }
-  }, [workflowData]);
+  }, [workflowData as unknown, setNodes, setEdges]);
 
   useWorkflowAutoSave(workflowId);
 
